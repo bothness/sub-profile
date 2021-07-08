@@ -28,7 +28,7 @@
 			$xScale.domain() :
 			$xScale.ticks(ticks);
 
-	function textAnchor(i) {
+	$: textAnchor = (i) => {
 		if (snapTicks === true) {
 			if (i === 0) {
 				return 'start';

@@ -93,18 +93,16 @@
 
 			let groups = ckmeans(array.map(d => d.value), 5);
 
-			if (!groups[4]) {
+			if (!groups[1]) {
 				array.forEach(d => d.color = 'grey');
 				data.geoBreaks = [0, 100];
 			} else {
-				let breaks = [
-					groups[0][0],
-					groups[1][0],
-					groups[2][0],
-					groups[3][0],
-					groups[4][0],
-					groups[4][groups[4].length - 1],
-				];
+				let breaks = [];
+				groups.forEach(grp => breaks.push(grp[0]));
+				breaks.push(groups[groups.length - 1][groups[groups.length - 1].length - 1]);
+				if (breaks[breaks.length - 1] == breaks[breaks.length - 2]) {
+					breaks.pop();
+				}
 				array.forEach(d => d.color = getColor(d.value, breaks, colors.seq));
 				data.geoBreaks = breaks;
 			}
@@ -142,6 +140,19 @@
 		});
 
 		return arr;
+	}
+
+	function getMedianAge(dataset) {
+		let values = dataset.residents.age.values;
+		let sum = makeSum(values);
+
+		let i = 0;
+		let count = 0;
+		while (count < sum / 2) {
+			count += values[i];
+			i += 1;
+		}
+		return i - 1;
 	}
 
 	function makeSum(values) {
@@ -207,12 +218,12 @@
 		<div class="text-small muted">{sum.selected.toLocaleString()} of {sum.all.toLocaleString()} people</div>
 	</div>
 	<div>
-		<span class="text-label">Age profile</span><br/>
-		<div class="chart" style="height: 85px;">
-			<ColChart data="{data.selected && makeData(['residents','age'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
-		</div>
+		<span class="text-label">Median Age</span>
+		<br/>
+		<span class="inline text-big">{getMedianAge(data.selected)}</span>
+		<span class="inline text-small">years</span>
 		{#if sum.all != sum.selected}
-		<div class="text-small muted"><li class="line"></li> vs England and Wales</div>
+		<div class="text-small muted">vs {getMedianAge(data.all)} years for whole population</div>
 		{/if}
 	</div>
 	<div id="map" style="grid-column: span {cols >= 2 ? 2 : 1};">
@@ -296,6 +307,15 @@
 			</MapSource>
 			{/if}
 		</Map>
+	</div>
+	<div>
+		<span class="text-label">Age profile</span><br/>
+		<div class="chart" style="height: 85px;">
+			<ColChart data="{data.selected && makeData(['residents','age'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
+		</div>
+		{#if sum.all != sum.selected}
+		<div class="text-small muted"><li class="line"></li> vs England and Wales</div>
+		{/if}
 	</div>
 	<div>
 		<span class="text-label">General health</span><br/>

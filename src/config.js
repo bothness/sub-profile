@@ -14,7 +14,7 @@ export const datasets = [
 		key: 'residents',
 		code: 'Usual-Residents',
 		tables: [
-			{ key: 'age', code: 'AGE_T019B' },
+			{ key: 'age', code: 'AGE' },
 			{ key: 'economic', code: 'ECOPUK11_R006A' },
 			{ key: 'travel', code: 'TRANSPORT' },
 			{ key: 'distance', code: 'AGGDTWPEW11_R010A' },
@@ -68,14 +68,14 @@ export const options = {
 
 export const codes = {
 	age: [
-		{label: '0-9', cells: [0, 1]},
-		{label: '10-19', cells: [2, 3]},
-		{label: '20-29', cells: [4, 5]},
-		{label: '30-39', cells: [6, 7]},
-		{label: '40-49', cells: [8, 9]},
-		{label: '50-59', cells: [10, 11]},
-		{label: '60-69', cells: [12, 13]},
-		{label: '70+', cells: [14, 15, 16, 17]}
+		{label: '0-9', cells: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]},
+		{label: '10-19', cells: [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]},
+		{label: '20-29', cells: [20, 21, 22, 23, 24, 25, 26, 27, 28, 29]},
+		{label: '30-39', cells: [30, 31, 32, 33, 34, 35, 36, 37, 38, 39]},
+		{label: '40-49', cells: [40, 41, 42, 43, 44, 45, 46, 47, 48, 49]},
+		{label: '50-59', cells: [50, 51, 52, 53, 54, 55, 56, 57, 58, 59]},
+		{label: '60-69', cells: [60, 61, 62, 63, 64, 65, 66, 67, 68, 69]},
+		{label: '70+', cells: [70, 71, 72, 73, 74]}
 	],
 	distance: [
 		{label: '0-2', cells: [0]},

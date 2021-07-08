@@ -12,11 +12,11 @@
 	export let key = 'x';
 	export let padding = { top: 0, bottom: 20, left: 2, right: 2 };
 	export let stagger = false;
-	export let formatTick = d => d.toFixed(0);
-	export let scale = 'linear';
+	export let scale = null;
 	export let suffix = '%';
 	
-	let d3scale = scale == "log" ? scaleLog : scale == "sqrt" ? scaleSqrt : scaleLinear;
+	$: formatTick = ticks[1] && (ticks[1] - ticks[0]) < 1 ? d => d.toFixed(1) : d => d.toFixed(0);
+	$: d3scale = scale == "log" ? scaleLog : scale == "sqrt" || ticks[1] && (ticks[1] - ticks[0]) < 0.3 ? scaleSqrt : scaleLinear;
 </script>
 
 <style>
