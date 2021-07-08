@@ -310,7 +310,7 @@
 	</div>
 	<div>
 		<span class="text-label">Age profile</span><br/>
-		<div class="chart" style="height: 85px;">
+		<div class="chart" style="height: 100px;">
 			<ColChart data="{data.selected && makeData(['residents','age'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
 		</div>
 		{#if sum.all != sum.selected}
@@ -331,7 +331,7 @@
 	</div>
 	<div>
 		<span class="text-label">Distance to work (km)</span><br/>
-		<div class="chart" style="height: 85px;">
+		<div class="chart" style="height: 100px;">
 			<ColChart data="{data.selected && makeData(['residents','distance'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
 		</div>
 		{#if sum.all != sum.selected}
