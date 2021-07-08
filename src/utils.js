@@ -1,6 +1,16 @@
 // import { csvParse, autoType } from 'd3-dsv';
 
 const endpoint = 'https://ftb-api-ext.ons.sensiblecode.io/graphql';
+const frag = `
+fragment tableDimensions on Table {
+  dimensions {
+    categories {
+      code
+      label
+    }
+  }
+}
+`.replace(/\s+/g, " ");
 const credentials = btoa("ahmad.barclay"+":"+"elope.puck.hails.explore");
 const headers = new Headers({
   "Content-Type": "application/json",
@@ -10,11 +20,10 @@ const headers = new Headers({
 // new Headers(JSON.parse(atob(headers)))
 
 export async function getData(datasets, selected = null) {
-  let keys;
   let variables = [];
   let filters = [];
   if (selected) {
-    keys = Object.keys(selected);
+    let keys = Object.keys(selected);
     keys.forEach(key => {
       if (selected[key].var) {
         variables.push(selected[key].var);
@@ -67,23 +76,26 @@ export async function getData(datasets, selected = null) {
   return json;
 }
 
-export async function getGeo(options, selected, keys, variables = []) {
-  const string = variables[0] ? ',"' + variables.join('","') + '"' : '';
+export async function getGeo(selected = null) {
+  let variables = [];
   let filters = [];
-
-  keys.forEach(key => {
-    if (variables.includes(options[key].code)) {
-      filters.push(`{variable: "${options[key].code}", codes: ${'["' + selected[key].code + '"]'}}`)
-    }
-  });
-
+  if (selected) {
+    let keys = Object.keys(selected);
+    keys.forEach(key => {
+      if (selected[key].var) {
+        variables.push(selected[key].var);
+        filters.push(`{variable: "${selected[key].var}", codes: ["${selected[key].code}"]}`);
+      }
+    });
+  }
+  let vars = variables[0] ? '"' + variables.join('","') + '",' : '';
   filters = filters[0] ? '[' + filters.join(',') + ']' : '[]';
 
   const query = `
   query {
     dataset(name:"Usual-Residents") {
       table(
-        variables: ["MSOA"${string}]
+        variables: ["MSOA"${vars}]
         filters: ${filters}
       )
       {
@@ -106,6 +118,14 @@ export async function getGeo(options, selected, keys, variables = []) {
 	let response = await fetch(endpoint, ops);
   let json = await response.json();
   return json;
+}
+
+export function getColor(value, breaks, colors) {
+  for (let i = 1; i < breaks.length; i ++) {
+    if (value <= breaks[i]) {
+      return colors[i - 1];
+    }
+  }
 }
 
 export function suffixer(int) {

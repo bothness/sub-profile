@@ -1,12 +1,14 @@
 <script>
-	import { getData, getGeo, suffixer, changeClass, changeStr } from "./utils";
-	import { urls, datasets, options, codes, mapStyle } from "./config";
+	import { ckmeans } from "simple-statistics";
+	import { getData, getGeo, getColor, suffixer, changeClass, changeStr } from "./utils";
+	import { urls, datasets, options, codes, mapStyle, msoaBldg, msoaBounds, colors } from "./config";
 	import ColChart from "./chart/ColChart.svelte";
 	import StackedBarChart from "./chart/StackedBarChart.svelte";
 	import Warning from "./ui/Warning.svelte";
 	import Map from "./map/Map.svelte";
 	import MapSource from "./map/MapSource.svelte";
 	import MapLayer from "./map/MapLayer.svelte";
+	import SpineChart from "./chart/SpineChart.svelte";
 	
 	// Elements
 	let w, wSex, wEthnicity, wBorn, cols;
@@ -23,7 +25,10 @@
 	// Data
 	let data = {
 		all: null,
-		selected: null
+		selected: null,
+		geoAll: null,
+		geoPerc: null,
+		geoBreaks: null
 	};
 	let sum = {
 		all: null,
@@ -54,21 +59,57 @@
 		});
 	}
 
-	function loadAll() {
-		getData(datasets)
-		.then(json => {
-			data.all = json.data;
-			sum.all = makeSum(json.data.residents.age.values);
-			data.selected = data.all;
-			sum.selected = sum.all;
-		});
-	}
-
 	function loadData() {
 		getData(datasets, selected)
 		.then(json => {
 			data.selected = json.data;
 			sum.selected = makeSum(json.data.residents.age.values);
+			if (!data.all) {
+				data.all = data.selected;
+				sum.all = sum.selected;
+			}
+			
+		});
+		getGeo(selected)
+		.then(json => {
+			let categories = json.data.dataset.table.dimensions[0].categories;
+			let codes = categories.map(d => d.code.slice(-9));
+			let names = categories.map(d => d.label);
+			
+			let values = json.data.dataset.table.values;
+
+			let index = {};
+			codes.forEach((code, i) => {
+				index[code] = values[i];
+			});
+			if (!data.geoAll) {
+				data.geoAll = index;
+			};
+
+			let array = [];
+			codes.forEach((code, i) => {
+				array.push({code: code, name: names[i], value: (index[code] / data.geoAll[code]) * 100});
+			});
+
+			let groups = ckmeans(array.map(d => d.value), 5);
+
+			if (!groups[4]) {
+				array.forEach(d => d.color = 'grey');
+				data.geoBreaks = [0, 100];
+			} else {
+				let breaks = [
+					groups[0][0],
+					groups[1][0],
+					groups[2][0],
+					groups[3][0],
+					groups[4][0],
+					groups[4][groups[4].length - 1],
+				];
+				array.forEach(d => d.color = getColor(d.value, breaks, colors.seq));
+				data.geoBreaks = breaks;
+			}
+
+			data.geoPerc = array;
 		});
 	}
 	
@@ -114,21 +155,17 @@
 	function getWidth(val) {
 		let width = 300;
 		if (val) {
-			width =  val + 50;
+			width =  val + 60;
 		}
 		return width
 	}
 
-	loadAll();
+	loadData();
 
 	$: w && onResize();
 </script>
 
 <Warning/>
-
-<div class="text-big hidden" aria-hidden="true" bind:clientWidth={wSex}>{selected.sex ? selected.sex.label : ''}</div>
-<div class="text-big hidden" aria-hidden="true" bind:clientWidth={wEthnicity}>{selected.ethnicity ? selected.ethnicity.label : ''}</div>
-<div class="text-big hidden" aria-hidden="true" bind:clientWidth={wBorn}>{selected.born ? selected.born.label : ''}</div>
 
 <div class="grid">
 	<div>
@@ -138,7 +175,7 @@
 				{#each options.sex as item}
 				<option value={item}>{item.label}</option>
 				{/each}
-			</select>, 
+			</select>
 			of
 			<!-- svelte-ignore a11y-no-onchange -->
 			<select bind:value={selected.ethnicity} on:change={loadData} style="width: {wEthnicity ? wEthnicity + 50 : 300}px">
@@ -178,6 +215,88 @@
 		<div class="text-small muted"><li class="line"></li> vs England and Wales</div>
 		{/if}
 	</div>
+	<div id="map" style="grid-column: span {cols >= 2 ? 2 : 1};">
+		<span class="text-label">% of population by neighbourhood</span><br/>
+		<div class="chart" style="height: 40px;">
+			{#if data.geoBreaks && data.geoPerc}
+			<SpineChart ticks={data.geoBreaks} data={hovered && data.geoPerc.find(d => d.code == hovered) ? [{x: data.geoPerc.find(d => d.code == hovered).value}] : []} colors={data.geoBreaks[1] == 100 ? ['lightgrey'] : colors.seq}/>
+			{/if}
+		</div>
+		<Map bind:map style={mapStyle} location={{ lon: -1.8904, lat: 52.4862, zoom: 10 }}>
+			{#if data.geoPerc}
+			<MapSource
+				id="msoa-buildings"
+				type="vector"
+				url={msoaBldg.url}
+				layer={msoaBldg.layer}
+				promoteId={msoaBldg.code}
+				maxzoom={13}
+			>
+				<MapLayer
+					id="msoa-buildings"
+					source="msoa-buildings"
+					sourceLayer={msoaBldg.layer}
+					data={data.geoPerc}
+					geoCode="code"
+					colorCode="color"
+					type="fill"
+					paint={{
+						"fill-color": [
+							"case",
+							["!=", ["feature-state", "color"], null],
+							["feature-state", "color"],
+							"rgba(255, 255, 255, 0)",
+						],
+					}}
+					order="aeroway-taxiway"
+				/>
+			</MapSource>
+			<MapSource
+				id="msoa-bounds"
+				type="vector"
+				url={msoaBounds.url}
+				layer={msoaBounds.layer}
+				promoteId={msoaBounds.code}
+				maxzoom={13}
+			>
+				<MapLayer
+					id="msoa-fill"
+					source="msoa-bounds"
+					sourceLayer={msoaBounds.layer}
+					data={data.geoPerc}
+					geoCode="code"
+					nameCode="name"
+					valueCode="value"
+					hover={true}
+					bind:hovered={hovered}
+					tooltip={true}
+					type="fill"
+					paint={{
+						"fill-color": "rgba(255, 255, 255, 0)",
+					}}
+					order="highway_name_other"
+				/>
+				<MapLayer
+					id="msoa-line"
+					source="msoa-bounds"
+					sourceLayer={msoaBounds.layer}
+					type="line"
+					paint={{
+						"line-color": "orange",
+						"line-width": 2,
+						"line-opacity": [
+							"case",
+							["==", ["feature-state", "hovered"], true],
+							1,
+							0,
+						],
+					}}
+					order="highway_name_other"
+				/>
+			</MapSource>
+			{/if}
+		</Map>
+	</div>
 	<div>
 		<span class="text-label">General health</span><br/>
 		<StackedBarChart data="{data.selected && makeData(['residents', 'health'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
@@ -212,77 +331,11 @@
 		<span class="text-label">Tenure of housing</span><br/>
 		<StackedBarChart data="{data.selected && makeData(['households', 'tenure'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
 	</div>
-	{#if false}
-	<div id="map" style="grid-column: span {cols == 2 ? 2 : cols && cols > 2 ? cols - 1 : 1};">
-		<Map bind:map location={{bounds: place.bounds}} style={mapStyle}>
-			<MapSource {...mapSources.wd}>
-				<MapLayer
-					{...mapLayers.wd}
-					id="wd-fill"
-					type="fill"
-					click={true}
-					selected={active.selected}
-					on:select={mapSelect}
-					highlight={true}
-					highlighted={active.highlighted}
-					hover={true}
-					hovered={active.hovered}
-					layout={{visibility: active.type == 'wd' || active.childType == 'wd' ? 'visible' : 'none'}}
-					paint={active.type == 'wd' ? mapPaint['fill-self'] : active.childType == 'wd' ? mapPaint['fill-child'] : mapPaint.fill}/>
-				<MapLayer
-					{...mapLayers.wd}
-					id="wd-bounds"
-					type="line"
-					selected={active.selected}
-					highlight={true}
-					highlighted={active.highlighted}
-					layout={{visibility: active.type == 'wd' || active.childType == 'wd' ? 'visible' : 'none'}}
-					paint={active.type == 'wd' ? mapPaint['line-active'] : active.childType == 'wd' ? mapPaint['line-child'] : mapPaint.line}/>
-				<MapLayer
-					{...mapLayers.wd}
-					id="wd-self"
-					type="line"
-					selected={active.selected}
-					layout={{visibility: active.type == 'wd' ? 'visible' : 'none'}}
-					paint={active.type == 'wd' ? mapPaint['line-self'] : mapPaint.line}/>
-			</MapSource>
-			<MapSource {...mapSources.crd}>
-				{#each Object.keys(mapLayers).filter(d => d != 'wd') as key}
-				<MapLayer
-					{...mapLayers[key]}
-					id={key + "-fill"}
-					type="fill"
-					click={true}
-					selected={active.selected}
-					on:select={mapSelect}
-					highlight={true}
-					highlighted={active.highlighted}
-					hover={true}
-					hovered={active.hovered}
-					layout={{visibility: active.type == key || active.childType == key ? 'visible' : 'none'}}
-					paint={active.type == key ? mapPaint['fill-active'] : active.childType == key ? mapPaint['fill-child'] : mapPaint.fill}/>
-				<MapLayer
-					{...mapLayers[key]}
-					id={key + "-bounds"}
-					type="line"
-					selected={active.selected}
-					highlight={true}
-					highlighted={active.highlighted}
-					layout={{visibility: active.type == key || active.childType == key ? 'visible' : 'none'}}
-					paint={active.type == key ? mapPaint['line-active'] : active.childType == key ? mapPaint['line-child'] : mapPaint.line}/>
-				<MapLayer
-					{...mapLayers[key]}
-					id={key + "-self"}
-					type="line"
-					selected={active.selected}
-					layout={{visibility: active.type == key ? 'visible' : 'none'}}
-					paint={active.type == key ? mapPaint['line-self'] : mapPaint.line}/>
-				{/each}
-			</MapSource>
-		</Map>
-	</div>
-	{/if}
 </div>
+
+<div class="text-big hidden" aria-hidden="true" bind:clientWidth={wSex}>{selected.sex ? selected.sex.label : ''}</div>
+<div class="text-big hidden" aria-hidden="true" bind:clientWidth={wEthnicity}>{selected.ethnicity ? selected.ethnicity.label : ''}</div>
+<div class="text-big hidden" aria-hidden="true" bind:clientWidth={wBorn}>{selected.born ? selected.born.label : ''}</div>
 
 <div class="grid mt mbs">
 	<div>
@@ -389,6 +442,7 @@
 		grid-gap: 10px;
 		grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
 		justify-content: stretch;
+		grid-auto-flow: row dense;
 	}
 	#grid {
 		grid-gap: 20px !important;
@@ -401,9 +455,11 @@
 		position: absolute;
 		display: inline-block;
 		top: -1000px;
+		height: 0;
+		line-height: 0;
 	}
 	#map {
-		grid-row: span 2;
+		grid-row: span 3;
 		min-height: 450px;
 	}
 	</style>

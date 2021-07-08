@@ -4,6 +4,11 @@ export const urls = {
 		quantiles: 'https://raw.githubusercontent.com/ONSvisual/census-data/main/json/quantiles/quartiles_'
 };
 
+export const colors = {
+	cat: ['#206095', '#A8BD3A', '#003C57', '#27A0CC', '#118C7B', '#F66068', '#746CB1', '#22D0B6', 'lightgrey'],
+	seq: ["#d5f690", "#5bc4b1", "#2e9daa", "#0079a2", "#005583"]
+};
+
 export const datasets = [
 	{
 		key: 'residents',
@@ -29,7 +34,7 @@ export const datasets = [
 
 export const options = {
 	sex: [
-		{label: 'People of any sex'},
+		{label: 'People'},
 		{var: 'SEX', code: '2', label: 'Females'},
 		{var: 'SEX', code: '1', label: 'Males'}
 	],
@@ -126,3 +131,13 @@ export const codes = {
 };
 
 export const mapStyle = 'https://bothness.github.io/ons-basemaps/data/style-omt.json';
+export const msoaBldg = {
+	url: "https://cdn.ons.gov.uk/maptiles/buildings/v1/{z}/{x}/{y}.pbf",
+	layer: "buildings",
+	code: "msoa11cd"
+};
+export const msoaBounds = {
+	url: "https://cdn.ons.gov.uk/maptiles/administrative/msoa/v2/boundaries/{z}/{x}/{y}.pbf",
+	layer: "msoa",
+	code: "areacd"
+};

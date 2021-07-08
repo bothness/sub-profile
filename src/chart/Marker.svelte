@@ -4,7 +4,7 @@
 	const { data, xGet, yGet, xScale, yScale, xDomain, yDomain } = getContext('LayerCake');
 
 	export let axis = 'x';
-	export let color = '#206095';
+	export let color = 'orange';
 	
 	$: min = axis == 'y' ? $xDomain[0] : $yDomain[0];
 	$: max = axis == 'y' ? $xDomain[1] : $yDomain[1];
@@ -12,12 +12,14 @@
 
 {#each $data as d}
 <g class="marker">
-	<circle
-		cx="{axis == 'y' ? $xScale((max + min) / 2) : $xGet(d)}"
-		cy="{axis == 'y' ? $yGet(d) : $yScale((max + min) / 2)}"
-		r="8"
-		fill="{color}"
-		stroke-width="0"
+	<line
+		x1="{axis == 'y' ? $xScale(max) : $xGet(d)}"
+		x2="{axis == 'y' ? $xScale(min) : $xGet(d)}"
+		y1="{axis == 'y' ? $yGet(d) : $yScale(max)}"
+		y2="{axis == 'y' ? $yGet(d) : $yScale(min)}"
+		stroke="{color}"
+		stroke-width="3"
+		stroke-linecap="butt"
 	/>
 </g>
 {/each}

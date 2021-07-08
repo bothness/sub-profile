@@ -18,9 +18,10 @@
 	export let layout = {};
 	export let paint = {};
 	export let data = null;
-	export let code = null;
-	export let name = 'name';
+	export let geoCode = null;
 	export let colorCode = null;
+	export let nameCode = null;
+	export let valueCode = null;
 	export let click = false;
 	export let ignoreClick = false;
 	export let clickCenter = false;
@@ -33,6 +34,7 @@
 	export let order = null;
 	export let maxzoom = null;
 	export let minzoom = null;
+	export let tooltip = false;
 	
 	const { getMap } = getContext('map');
 	const map = getMap();
@@ -78,14 +80,16 @@
 			map.setFeatureState({
 				source: source,
 				sourceLayer: sourceLayer,
-				id: d[code]
+				id: d[geoCode]
 			}, {
-				color: d[colorCode]
+				color: colorCode ? d[colorCode] : null,
+				name: nameCode ? d[nameCode] : null,
+				value: valueCode ? d[valueCode] : null
 			});
 		});
 	}
 
-	$: colorCode && updateColors();
+	$: (data || colorCode) && updateColors();
 
 	// Updates the "highlighted" feature state as geo codes are added to/removed from the highlighted array
 	$: if (highlight && highlighted != highlightedPrev) {
@@ -116,40 +120,38 @@
 	if (click) {
 		map.on('click', id, (e) => {
       if (e.features.length > 0 && !ignoreClick) {
-				if (highlighted.includes(e.features[0].id)) {
-					selected = e.features[0].id;
+				selected = e.features[0].id;
 
-					dispatch('select', {
-						code: selected
-					});
+				dispatch('select', {
+					code: selected
+				});
 				
-					if (selectedPrev) {
-						map.setFeatureState(
-        	    { source: source, sourceLayer: sourceLayer, id: selectedPrev },
-        	    { selected: false }
-        	  );
-					}
-				
+				if (selectedPrev) {
 					map.setFeatureState(
-        	  { source: source, sourceLayer: sourceLayer, id: selected },
-        	  { selected: true }
-					);
-
-					if (clickCenter) {
-						let center = centroid(e.features[0].toJSON().geometry);
-						map.flyTo({
-							center: center.geometry.coordinates
-						});
-					}
-				
-					selectedPrev = selected;
+            { source: source, sourceLayer: sourceLayer, id: selectedPrev },
+            { selected: false }
+          );
 				}
+				
+				map.setFeatureState(
+          { source: source, sourceLayer: sourceLayer, id: selected },
+          { selected: true }
+				);
+
+				if (clickCenter) {
+					let center = centroid(e.features[0].toJSON().geometry);
+					map.flyTo({
+						center: center.geometry.coordinates
+					});
+				}
+				
+				selectedPrev = selected;
 			}
     });
 	}
 	
 	// Updates the selected geo code if it is changed elsewhere in the app (outside of this component)
-	$: if (selected != selectedPrev) {
+	$: if (click && selected != selectedPrev) {
 		if (selectedPrev) {
 			map.setFeatureState(
 				{ source: source, sourceLayer: sourceLayer, id: selectedPrev },
@@ -169,31 +171,30 @@
 	if (hover) {
 		map.on('mousemove', id, (e) => {
       if (e.features.length > 0) {
-				if (highlighted.includes(e.features[0].id)) {
-					if (hovered) {
-          	map.setFeatureState(
-            	{ source: source, sourceLayer: sourceLayer, id: hovered },
-            	{ hovered: false }
-          	);
-        	}
-					hovered = hoveredPrev = e.features[0].id;
+        if (hovered) {
+          map.setFeatureState(
+            { source: source, sourceLayer: sourceLayer, id: hovered },
+            { hovered: false }
+          );
+        }
+				hovered = hoveredPrev = e.features[0].id;
 
-        	map.setFeatureState(
-        	  { source: source, sourceLayer: sourceLayer, id: hovered },
-        	  { hovered: true }
-        	);
+        map.setFeatureState(
+          { source: source, sourceLayer: sourceLayer, id: hovered },
+          { hovered: true }
+        );
 
-        	// Change the cursor style as a UI indicator.
-					map.getCanvas().style.cursor = 'pointer';
+        // Change the cursor style as a UI indicator.
+				map.getCanvas().style.cursor = 'pointer';
 
-					// Show popup
+				// Show popup
+				let state = map.getFeatureState({ source: source, sourceLayer: sourceLayer, id: hovered });
+
+				if (tooltip && state.name) {
 					popup
 						.setLngLat(e.lngLat)
-						.setHTML(`<strong>${e.features[0].properties[name]}</strong>`)
+						.setHTML(`<strong>${state.name}</strong>${state.value ? "<br/>" + state.value.toFixed(1) + "%" : ""}`)
 						.addTo(map);
-				} else {
-					// Remove popup
-					popup.remove();
 				}
       }
 		});
@@ -209,7 +210,9 @@
 			
 			// Reset cursor and remove popup
 			map.getCanvas().style.cursor = '';
-			popup.remove();
+			if (tooltip) {
+				popup.remove();
+			}
     });
 	}
 	
@@ -236,5 +239,6 @@
 	:global(.mapboxgl-popup-content) {
 		pointer-events: none !important;
 		padding: 2px 5px !important;
+		color: black;
 	}
 </style>
