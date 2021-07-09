@@ -11,8 +11,6 @@
   });
 	
 	export let id;
-	export let source;
-	export let sourceLayer = null;
 	export let type;
 	export let filter = null;
 	export let layout = {};
@@ -36,6 +34,7 @@
 	export let minzoom = null;
 	export let tooltip = false;
 	
+	const { source, sourceLayer } = getContext('source');
 	const { getMap } = getContext('map');
 	const map = getMap();
 	
@@ -75,6 +74,7 @@
 	// Assumes that each data point has the colours defined on the colorCode key
 	function updateColors() {
 		console.log('updating colors...');
+		console.log(data.length);
 
 		data.forEach(d => {
 			map.setFeatureState({
@@ -193,7 +193,7 @@
 				if (tooltip && state.name) {
 					popup
 						.setLngLat(e.lngLat)
-						.setHTML(`<strong>${state.name}</strong>${state.value ? "<br/>" + state.value.toFixed(1) + "%" : ""}`)
+						.setHTML(`<strong>${state.name}</strong>${state.value ? "<br/>" + state.value.toFixed(1) + "%" : "<br/>No data"}`)
 						.addTo(map);
 				}
       }

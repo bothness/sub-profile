@@ -1,5 +1,5 @@
 <script>
-	import { getContext } from 'svelte';
+	import { getContext, setContext } from 'svelte';
 	
 	export let id;
 	export let type;
@@ -15,6 +15,11 @@
 	
 	const { getMap } = getContext('map');
 	const map = getMap();
+
+	setContext("source", {
+		source: id,
+		sourceLayer: layer
+	});
 	
 	if (map.getSource(id)) {
     map.removeSource(id);

@@ -1,4 +1,4 @@
-// import { csvParse, autoType } from 'd3-dsv';
+import { csvParse, autoType } from 'd3-dsv';
 
 const endpoint = 'https://ftb-api-ext.ons.sensiblecode.io/graphql';
 const frag = `
@@ -6,7 +6,6 @@ fragment tableDimensions on Table {
   dimensions {
     categories {
       code
-      label
     }
   }
 }
@@ -18,6 +17,12 @@ const headers = new Headers({
 });
 
 // new Headers(JSON.parse(atob(headers)))
+
+export async function getCSV(url) {
+  let response = await fetch(url);
+  let string = await response.text();
+  return csvParse(string, autoType);
+}
 
 export async function getData(datasets, selected = null) {
   let variables = [];

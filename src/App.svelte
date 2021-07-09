@@ -1,6 +1,6 @@
 <script>
 	import { ckmeans } from "simple-statistics";
-	import { getData, getGeo, getColor, suffixer, changeClass, changeStr } from "./utils";
+	import { getData, getGeo, getCSV, getColor, suffixer, changeClass, changeStr } from "./utils";
 	import { urls, datasets, options, codes, mapStyle, msoaBldg, msoaBounds, colors } from "./config";
 	import ColChart from "./chart/ColChart.svelte";
 	import StackedBarChart from "./chart/StackedBarChart.svelte";
@@ -26,6 +26,8 @@
 	let data = {
 		all: null,
 		selected: null,
+		geoLookup: null,
+		geoCodes: null,
 		geoAll: null,
 		geoPerc: null,
 		geoBreaks: null
@@ -33,30 +35,6 @@
 	let sum = {
 		all: null,
 		selected: null
-	}
-	
-	function loadSelection() {
-		fetch(urls.places + code + '.json')
-		.then(res => res.json())
-		.then(json => {
-			json.children = options.filter(d => d.parent == code);
-			
-			if (json.count > 20) {
-				fetch(urls.quantiles + json.type + '.json')
-				.then(res => res.json())
-				.then(quart => {
-					quartiles = quart;
-					place = json;
-					updateActive(place);
-					fitMap(place.bounds);
-				});
-			} else {
-				quartiles = null;
-				place = json;
-				updateActive(place);
-				fitMap(place.bounds);
-			}
-		});
 	}
 
 	function loadData() {
@@ -73,8 +51,7 @@
 		getGeo(selected)
 		.then(json => {
 			let categories = json.data.dataset.table.dimensions[0].categories;
-			let codes = categories.map(d => d.code.slice(-9));
-			let names = categories.map(d => d.label);
+			let codes = categories.map(d => d.code.slice(-9))
 			
 			let values = json.data.dataset.table.values;
 
@@ -84,17 +61,18 @@
 			});
 			if (!data.geoAll) {
 				data.geoAll = index;
+				data.geoCodes = codes;
 			};
 
 			let array = [];
-			codes.forEach((code, i) => {
-				array.push({code: code, name: names[i], value: (index[code] / data.geoAll[code]) * 100});
+			data.geoCodes.forEach(code => {
+				array.push({code: code, name: data.geoLookup[code], value: index[code] ? (index[code] / data.geoAll[code]) * 100 : null});
 			});
 
-			let groups = ckmeans(array.map(d => d.value), 5);
+			let groups = ckmeans(array.map(d => d.value).filter(d => d != null), 5);
 
 			if (!groups[1]) {
-				array.forEach(d => d.color = 'grey');
+				array.forEach(d => d.color = colors.seq[4]);
 				data.geoBreaks = [0, 100];
 			} else {
 				let breaks = [];
@@ -103,7 +81,7 @@
 				if (breaks[breaks.length - 1] == breaks[breaks.length - 2]) {
 					breaks.pop();
 				}
-				array.forEach(d => d.color = getColor(d.value, breaks, colors.seq));
+				array.forEach(d => d.color = d.value ? getColor(d.value, breaks, colors.seq) : colors.nodata);
 				data.geoBreaks = breaks;
 			}
 
@@ -171,7 +149,16 @@
 		return width
 	}
 
-	loadData();
+	getCSV(urls.names)
+	.then(json => {
+		let index = {};
+		json.forEach(d => index[d.code] = d.name);
+		data.geoLookup = index;
+		return data.geoLookup;
+	})
+	.then(lookup => {
+		loadData();
+	});
 
 	$: w && onResize();
 </script>
@@ -230,7 +217,7 @@
 		<span class="text-label">% of population by neighbourhood</span><br/>
 		<div class="chart" style="height: 40px;">
 			{#if data.geoBreaks && data.geoPerc}
-			<SpineChart ticks={data.geoBreaks} data={hovered && data.geoPerc.find(d => d.code == hovered) ? [{x: data.geoPerc.find(d => d.code == hovered).value}] : []} colors={data.geoBreaks[1] == 100 ? ['lightgrey'] : colors.seq}/>
+			<SpineChart ticks={data.geoBreaks} data={hovered && data.geoPerc.find(d => d.code == hovered) ? [{x: data.geoPerc.find(d => d.code == hovered).value}] : []} colors={data.geoBreaks[1] == 100 ? [colors.seq[4]] : colors.seq}/>
 			{/if}
 		</div>
 		<Map bind:map style={mapStyle} location={{ lon: -1.8904, lat: 52.4862, zoom: 10 }}>
@@ -245,8 +232,6 @@
 			>
 				<MapLayer
 					id="msoa-buildings"
-					source="msoa-buildings"
-					sourceLayer={msoaBldg.layer}
 					data={data.geoPerc}
 					geoCode="code"
 					colorCode="color"
@@ -272,8 +257,6 @@
 			>
 				<MapLayer
 					id="msoa-fill"
-					source="msoa-bounds"
-					sourceLayer={msoaBounds.layer}
 					data={data.geoPerc}
 					geoCode="code"
 					nameCode="name"
@@ -289,8 +272,6 @@
 				/>
 				<MapLayer
 					id="msoa-line"
-					source="msoa-bounds"
-					sourceLayer={msoaBounds.layer}
 					type="line"
 					paint={{
 						"line-color": "orange",

@@ -1,12 +1,11 @@
 export const urls = {
-		options: 'https://raw.githubusercontent.com/ONSvisual/census-data/main/csv/lists/places_2020.csv',
-		places: 'https://raw.githubusercontent.com/ONSvisual/census-data/main/json/place/',
-		quantiles: 'https://raw.githubusercontent.com/ONSvisual/census-data/main/json/quantiles/quartiles_'
+	names: './data/msoa11-names.csv'
 };
 
 export const colors = {
 	cat: ['#206095', '#A8BD3A', '#003C57', '#27A0CC', '#118C7B', '#F66068', '#746CB1', '#22D0B6', 'lightgrey'],
-	seq: ["#d5f690", "#5bc4b1", "#2e9daa", "#0079a2", "#005583"]
+	seq: ["#d5f690", "#5bc4b1", "#2e9daa", "#0079a2", "#005583"],
+	nodata: "#999"
 };
 
 export const datasets = [
