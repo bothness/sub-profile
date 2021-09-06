@@ -27,17 +27,28 @@ export async function getCSV(url) {
 export async function getData(datasets, selected = null) {
   let variables = [];
   let filters = [];
+  let altVariables = [];
+  let altFilters = [];
+
   if (selected) {
     let keys = Object.keys(selected);
     keys.forEach(key => {
       if (selected[key].var) {
         variables.push(selected[key].var);
         filters.push(`{variable: "${selected[key].var}", codes: ["${selected[key].code}"]}`);
+        
+        if (key != 'age') {
+          altVariables.push(selected[key].var);
+          altFilters.push(`{variable: "${selected[key].var}", codes: ["${selected[key].code}"]}`);
+        }
       }
     });
   }
-  let vars = variables[0] ? '"' + variables.join('","') + '",' : '';
+
+  variables = variables[0] ? '"' + variables.join('","') + '",' : '';
   filters = filters[0] ? '[' + filters.join(',') + ']' : '[]';
+  altVariables = altVariables[0] ? '"' + altVariables.join('","') + '",' : '';
+  altFilters = altFilters[0] ? '[' + altFilters.join(',') + ']' : '[]';
 
   let dats = [];
   datasets.forEach(dat => {
@@ -45,8 +56,8 @@ export async function getData(datasets, selected = null) {
     dat.tables.forEach(tab => {
       tabs.push(`
       ${tab.key}: table(
-        variables: [${vars}"${tab.code}"]
-        filters: ${filters}
+        variables: [${tab.key == "age" ? altVariables : variables}"${tab.code}"]
+        filters: ${tab.key == "age" ? altFilters : filters}
       )
       {
         values
@@ -78,6 +89,16 @@ export async function getData(datasets, selected = null) {
 	
 	let response = await fetch(endpoint, ops);
   let json = await response.json();
+
+  // Hack for filtering single year age data
+  if (selected.age.code && json.data.residents.age.values) {
+    let ages = [...json.data.residents.age.values];
+    let cells = selected.age.code.split('-');
+    cells.forEach((d, i) => cells[i] = +d);
+    ages.forEach((d, i) => ages[i] = i >= cells[0] && i <= cells[1] ? d : 0);
+    json.data.residents.age.values = ages;
+  }
+
   return json;
 }
 

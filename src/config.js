@@ -1,3 +1,25 @@
+export const themes = {
+  'light': {
+		'name': 'light',
+    'text': '#222',
+    'muted': '#777',
+    'pale': '#f0f0f0',
+    'background': '#fff'
+  },
+  'dark': {
+		'name': 'dark',
+    'text': '#fff',
+    'muted': '#bbb',
+    'pale': '#333',
+    'background': '#222'
+  }
+};
+
+export const texts = {
+	comparison: 'vs overall population',
+	nodata: 'Data not available.'
+};
+
 export const urls = {
 	names: './data/msoa11-names.csv'
 };
@@ -59,9 +81,36 @@ export const options = {
 		{var: 'ETHNICITYEW', code: '18', label: 'other'}
 	],
 	born: [
-		{label: 'born anywhere'},
-		{var: 'COB_T003B', code: '1-5', label: 'born in UK'},
-		{var: 'COB_T003B', code: '6-26', label: 'born outside UK'}
+		{label: 'anywhere'},
+		{var: 'COB_T003B', code: '1-5', label: 'in UK'},
+		{var: 'COB_T003B', code: '6-26', label: 'outside UK'}
+	],
+	religion: [
+		{label: 'any'},
+		{var: 'RELIGIONEW', code: '1', label: 'no'},
+		{var: 'RELIGIONEW', code: '2', label: 'Christian'},
+		{var: 'RELIGIONEW', code: '3', label: 'Buddhist'},
+		{var: 'RELIGIONEW', code: '4', label: 'Hindu'},
+		{var: 'RELIGIONEW', code: '5', label: 'Jewish'},
+		{var: 'RELIGIONEW', code: '6', label: 'Muslim'},
+		{var: 'RELIGIONEW', code: '7', label: 'Sikh'},
+		{var: 'RELIGIONEW', code: '8', label: 'other'},
+		{var: 'RELIGIONEW', code: '9', label: 'unstated'}
+	],
+	english: [
+		{label: 'or not'},
+		{var: 'LANGPRF_R006A', code: '1', label: 'natively'},
+		{var: 'LANGPRF_R006A', code: '2', label: 'very well'},
+		{var: 'LANGPRF_R006A', code: '3', label: 'well'},
+		{var: 'LANGPRF_R006A', code: '4', label: 'not well'},
+		{var: 'LANGPRF_R006A', code: '5', label: 'not at all'}
+	],
+	age: [
+		{label: "any age"},
+		{var: 'AGE_T005B', code: '0-15', label: '0 to 15'},
+		{var: 'AGE_T005B', code: '16-49', label: '16 to 49'},
+		{var: 'AGE_T005B', code: '50-64', label: '50 to 64'},
+		{var: 'AGE_T005B', code: '65-90', label: '65 plus'}
 	]
 }
 

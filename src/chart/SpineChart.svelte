@@ -12,8 +12,8 @@
 	export let key = 'x';
 	export let padding = { top: 0, bottom: 20, left: 2, right: 2 };
 	export let stagger = false;
-	export let scale = null;
-	export let suffix = '%';
+	export let scale = 'linear';
+	export let suffix = '';
 	
 	$: formatTick = ticks[1] && (ticks[1] - ticks[0]) < 1 ? d => d.toFixed(1) : d => d.toFixed(0);
 	$: d3scale = scale == "log" ? scaleLog : scale == "sqrt" || ticks[1] && (ticks[1] - ticks[0]) < 0.3 ? scaleSqrt : scaleLinear;

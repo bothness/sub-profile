@@ -1,8 +1,6 @@
 <script>
 	import { getContext } from 'svelte';
-
 	const { data, xGet, yGet, xScale, yScale, xDomain, yDomain } = getContext('LayerCake');
-
 	export let axis = 'x';
 	export let color = 'orange';
 	

@@ -1,13 +1,15 @@
-<div class="warning">
-  <strong>Warning!</strong> This is a prototype. Data is fictitious. Any resemblance to real life data is coincidental.
-</div>
+<nav class="warning">
+  <div class="col-wide middle">
+    <strong>WARNING! This is a prototype. Data is synthetic. It is NOT actual 2021 Census data.</strong>
+  </div>
+</nav>
 
 <style>
   .warning {
-    display: block;
     color: white;
     background-color: #bb3333;
     margin-bottom: 10px;
-    padding: 2px 4px;
+    padding: 8px 0;
+    font-size: 1em;
   }
 </style>

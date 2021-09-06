@@ -1,24 +1,36 @@
 <script>
+  import { setContext } from "svelte";
 	import { ckmeans } from "simple-statistics";
 	import { getData, getGeo, getCSV, getColor, suffixer, changeClass, changeStr } from "./utils";
-	import { urls, datasets, options, codes, mapStyle, msoaBldg, msoaBounds, colors } from "./config";
+	import { themes, urls, datasets, options, codes, mapStyle, msoaBldg, msoaBounds, colors, texts } from "./config";
+	import Warning from "./ui/Warning.svelte";
+	import ONSHeader from "./layout/ONSHeader.svelte";
+	import ONSFooter from "./layout/ONSFooter.svelte";
+  import Section from "./layout/Section.svelte";
 	import ColChart from "./chart/ColChart.svelte";
 	import StackedBarChart from "./chart/StackedBarChart.svelte";
-	import Warning from "./ui/Warning.svelte";
 	import Map from "./map/Map.svelte";
 	import MapSource from "./map/MapSource.svelte";
 	import MapLayer from "./map/MapLayer.svelte";
 	import SpineChart from "./chart/SpineChart.svelte";
+
+	// STYLE CONFIG
+  // Set theme globally (options are 'light' or 'dark')
+  let theme = "light";
+  setContext("theme", themes[theme]);
 	
 	// Elements
-	let w, wSex, wEthnicity, wBorn, cols;
+	let w, wSex, wAge, wEthnicity, wReligion, wBorn, wEnglish, cols;
 	let map = null;
 
 	// State
 	let selected = {
 		sex: options.sex[0],
+		age: options.age[0],
 		ethnicity: options.ethnicity[0],
-		born: options.born[0]
+		religion: options.religion[0],
+		born: options.born[0],
+		english: options.english[0]
 	};
 	let hovered = null;
 
@@ -40,38 +52,49 @@
 	function loadData() {
 		getData(datasets, selected)
 		.then(json => {
+			sum.selected = makeSum(json.data.residents.health.values);
 			data.selected = json.data;
-			sum.selected = makeSum(json.data.residents.age.values);
 			if (!data.all) {
 				data.all = data.selected;
 				sum.all = sum.selected;
 			}
-			
 		});
 		getGeo(selected)
 		.then(json => {
-			let categories = json.data.dataset.table.dimensions[0].categories;
-			let codes = categories.map(d => d.code.slice(-9))
-			
-			let values = json.data.dataset.table.values;
-
-			let index = {};
-			codes.forEach((code, i) => {
-				index[code] = values[i];
-			});
-			if (!data.geoAll) {
-				data.geoAll = index;
-				data.geoCodes = codes;
-			};
-
 			let array = [];
-			data.geoCodes.forEach(code => {
-				array.push({code: code, name: data.geoLookup[code], value: index[code] ? (index[code] / data.geoAll[code]) * 100 : null});
-			});
+			let groups = null;
 
-			let groups = ckmeans(array.map(d => d.value).filter(d => d != null), 5);
+			if (json.data.dataset.table.dimensions) {
+				let categories = json.data.dataset.table.dimensions[0].categories;
+			  let codes = categories.map(d => d.code.slice(-9));
+			
+			  let values = json.data.dataset.table.values;
 
-			if (!groups[1]) {
+			  let index = {};
+			  codes.forEach((code, i) => {
+			  	index[code] = values[i];
+			  });
+			  if (!data.geoAll) {
+			  	data.geoAll = index;
+			  	data.geoCodes = codes;
+			  };
+
+			  data.geoCodes.forEach(code => {
+			  	array.push({code: code, name: data.geoLookup[code], value: index[code] ? (index[code] / data.geoAll[code]) * 100 : null});
+			  });
+
+			  let vals = array.map(d => d.value).filter(d => d != null);
+			  groups = vals[4] ? ckmeans(vals, 5) : null;
+			} else {
+				data.geoCodes.forEach(code => {
+			  	array.push({code: code, name: data.geoLookup[code], value: null});
+			  });
+			}
+
+			if (groups == null) {
+				array.forEach(d => d.color = colors.nodata);
+				data.geoBreaks = [0, 100];
+			} else if (!groups[1]) {
 				array.forEach(d => d.color = colors.seq[4]);
 				data.geoBreaks = [0, 100];
 			} else {
@@ -106,6 +129,7 @@
 			cd.cells.forEach(i => {
 				valAll += valsAll[i];
 				sumAll += valsAll[i];
+
 				valSelected += valsSelected[i];
 				sumSelected += valsSelected[i];
 			});
@@ -134,7 +158,12 @@
 	}
 
 	function makeSum(values) {
-		return values.reduce((acc, curr) => acc + curr);
+		return values ? values.reduce((a, b) => a + b) : 0;
+	}
+
+	function isNA(arr) {
+		let sum = arr ? arr.slice(0,-1).reduce((a, b) => a + b) : 0;
+		return sum == 0;
 	}
 
 	function onResize() {
@@ -142,9 +171,9 @@
 	}
 
 	function getWidth(val) {
-		let width = 300;
+		let width = 200;
 		if (val) {
-			width =  val + 60;
+			width =  val + 40;
 		}
 		return width
 	}
@@ -160,34 +189,61 @@
 		loadData();
 	});
 
+
 	$: w && onResize();
+	$: console.log(sum.selected);
 </script>
 
 <Warning/>
+<ONSHeader/>
 
-<div class="grid">
+<Section column="wide">
+
+<div class="grid mtl">
 	<div>
-		<span class="text-big">
+		<span class="text-med">
 			<!-- svelte-ignore a11y-no-onchange -->
 			<select bind:value={selected.sex} on:change={loadData} style="width: {wSex && getWidth(wSex)}px">
 				{#each options.sex as item}
 				<option value={item}>{item.label}</option>
 				{/each}
 			</select>
+			aged 
+			<!-- svelte-ignore a11y-no-onchange -->
+			<select bind:value={selected.age} on:change={loadData} style="width: {wAge && getWidth(wAge)}px">
+				{#each options.age as item}
+				<option value={item}>{item.label}</option>
+				{/each}
+			</select>,
 			of
 			<!-- svelte-ignore a11y-no-onchange -->
-			<select bind:value={selected.ethnicity} on:change={loadData} style="width: {wEthnicity ? wEthnicity + 50 : 300}px">
+			<select bind:value={selected.ethnicity} on:change={loadData} style="width: {wEthnicity && getWidth(wEthnicity)}px">
 				{#each options.ethnicity as item}
 				<option value={item}>{item.label}</option>
 				{/each}
 			</select>
 			ethnicity, 
 			<!-- svelte-ignore a11y-no-onchange -->
-			<select bind:value={selected.born} on:change={loadData} style="width: {wBorn ? wBorn + 50 : 300}px">
-				{#each options.born as item}
+			<select bind:value={selected.religion} on:change={loadData} style="width: {wReligion && getWidth(wReligion)}px">
+				{#each options.religion as item}
 				<option value={item}>{item.label}</option>
 				{/each}
 			</select>
+			religion, born 
+			<!-- svelte-ignore a11y-no-onchange -->
+			<select bind:value={selected.born} on:change={loadData} style="width: {wBorn && getWidth(wBorn)}px">
+				{#each options.born as item}
+				<option value={item}>{item.label}</option>
+				{/each}
+			</select>, 
+			and speaking English 
+			<!-- svelte-ignore a11y-no-onchange -->
+			<select bind:value={selected.english} on:change={loadData} style="width: {wEnglish && getWidth(wEnglish)}px">
+				{#each options.english as item}
+				<option value={item}>{item.label}</option>
+				{/each}
+			</select>
+			.
 		</span>
 		{#if sum.all != sum.selected}
 		<br/>Compared with overall population of England and Wales
@@ -195,22 +251,28 @@
 	</div>
 </div>
 
-{#if data.all && data.selected && sum.all && sum.selected}
+{#if data.all && data.selected && sum.all && sum.selected >= 0}
 <div id="grid" class="grid mt" bind:clientWidth={w}>
 	<div>
-		<span class="text-label">Population</span>
-		<br/>
+		<span class="text-label">Population</span><br/>
+		{#if sum.selected == 0}
+		<span class="muted">{texts.nodata}</span>
+		{:else}
 		<span class="inline text-big">{Math.round((sum.selected / sum.all) * 100) > 0 ? Math.round((sum.selected / sum.all) * 100) : '<1'}%</span>
 		<span class="inline condensed text-small">of people in<br/>England and Wales</span>
 		<div class="text-small muted">{sum.selected.toLocaleString()} of {sum.all.toLocaleString()} people</div>
+		{/if}
 	</div>
 	<div>
-		<span class="text-label">Median Age</span>
-		<br/>
+		<span class="text-label">Median Age</span><br/>
+		{#if isNA(data.selected.residents.age.values)}
+		<span class="muted">{texts.nodata}</span>
+		{:else}
 		<span class="inline text-big">{getMedianAge(data.selected)}</span>
 		<span class="inline text-small">years</span>
 		{#if sum.all != sum.selected}
-		<div class="text-small muted">vs {getMedianAge(data.all)} years for whole population</div>
+		<div class="text-small muted">vs {getMedianAge(data.all)} years for overall population</div>
+		{/if}
 		{/if}
 	</div>
 	<div id="map" style="grid-column: span {cols >= 2 ? 2 : 1};">
@@ -291,68 +353,94 @@
 	</div>
 	<div>
 		<span class="text-label">Age profile</span><br/>
+		{#if isNA(data.selected.residents.age.values)}
+		<span class="muted">{texts.nodata}</span>
+		{:else}
 		<div class="chart" style="height: 100px;">
 			<ColChart data="{data.selected && makeData(['residents','age'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
 		</div>
 		{#if sum.all != sum.selected}
-		<div class="text-small muted"><li class="line"></li> vs England and Wales</div>
+		<div class="text-small muted"><li class="line"></li> {texts.comparison}</div>
+		{/if}
 		{/if}
 	</div>
 	<div>
 		<span class="text-label">General health</span><br/>
-		<StackedBarChart data="{data.selected && makeData(['residents', 'health'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
+		{#if isNA(data.selected.residents.health.values)}
+		<span class="muted">{texts.nodata}</span>
+		{:else}
+		<StackedBarChart label={texts.comparison} data="{data.selected && makeData(['residents', 'health'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
+		{/if}
 	</div>
 	<div>
 		<span class="text-label">Social grade</span><br/>
-		<StackedBarChart data="{data.selected && makeData(['residents', 'grade'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
+		{#if isNA(data.selected.residents.grade.values)}
+		<span class="muted">{texts.nodata}</span>
+		{:else}
+		<StackedBarChart label={texts.comparison} data="{data.selected && makeData(['residents', 'grade'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
+		{/if}
 	</div>
 	<div>
 		<span class="text-label">Economic activity</span><br/>
-		<StackedBarChart data="{data.selected && makeData(['residents', 'economic'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
+		{#if isNA(data.selected.residents.economic.values)}
+		<span class="muted">{texts.nodata}</span>
+		{:else}
+		<StackedBarChart label={texts.comparison} data="{data.selected && makeData(['residents', 'economic'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
+		{/if}
 	</div>
 	<div>
 		<span class="text-label">Distance to work (km)</span><br/>
+		{#if isNA(data.selected.residents.distance.values)}
+		<span class="muted">{texts.nodata}</span>
+		{:else}
 		<div class="chart" style="height: 100px;">
 			<ColChart data="{data.selected && makeData(['residents','distance'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
 		</div>
 		{#if sum.all != sum.selected}
-		<div class="text-small muted"><li class="line"></li> vs England and Wales</div>
+		<div class="text-small muted"><li class="line"></li> vs whole population</div>
 		{/if}
 		<div class="text-small muted">Excludes home workers and other circumstances</div>
+		{/if}
 	</div>
 	<div>
 		<span class="text-label">Mode of travel to work</span><br/>
-		<StackedBarChart data="{data.selected && makeData(['residents', 'travel'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
+		{#if isNA(data.selected.residents.travel.values)}
+		<span class="muted">{texts.nodata}</span>
+		{:else}
+		<StackedBarChart label={texts.comparison} data="{data.selected && makeData(['residents', 'travel'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
+		{/if}
 	</div>
 	<div>
 		<span class="text-label">Type of housing</span><br/>
-		<StackedBarChart data="{data.selected && makeData(['households', 'housing'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
+		{#if isNA(data.selected.households.housing.values)}
+		<span class="muted">{texts.nodata}</span>
+		{:else}
+		<StackedBarChart label={texts.comparison} data="{data.selected && makeData(['households', 'housing'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
+		{/if}
 	</div>
 	<div>
 		<span class="text-label">Tenure of housing</span><br/>
-		<StackedBarChart data="{data.selected && makeData(['households', 'tenure'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
+		{#if isNA(data.selected.households.tenure.values)}
+		<span class="muted">{texts.nodata}</span>
+		{:else}
+		<StackedBarChart label={texts.comparison} data="{data.selected && makeData(['households', 'tenure'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
+		{/if}
 	</div>
 </div>
 
-<div class="text-big hidden" aria-hidden="true" bind:clientWidth={wSex}>{selected.sex ? selected.sex.label : ''}</div>
-<div class="text-big hidden" aria-hidden="true" bind:clientWidth={wEthnicity}>{selected.ethnicity ? selected.ethnicity.label : ''}</div>
-<div class="text-big hidden" aria-hidden="true" bind:clientWidth={wBorn}>{selected.born ? selected.born.label : ''}</div>
-
-<div class="grid mt mbs">
-	<div>
-		<img src="https://onsvisual.github.io/svelte-scrolly/img/ons-logo-pos-en.svg" alt="Office for National Statistics"/>
-	</div>
-	<div class:text-right={cols > 1}>
-		<span class="text-small">Source: Census 2011, with change +/- from Census 2001.</span>
-	</div>
-</div>
+<div class="text-med hidden" aria-hidden="true" bind:clientWidth={wSex}>{selected.sex ? selected.sex.label : ''}</div>
+<div class="text-med hidden" aria-hidden="true" bind:clientWidth={wAge}>{selected.age ? selected.age.label : ''}</div>
+<div class="text-med hidden" aria-hidden="true" bind:clientWidth={wEthnicity}>{selected.ethnicity ? selected.ethnicity.label : ''}</div>
+<div class="text-med hidden" aria-hidden="true" bind:clientWidth={wReligion}>{selected.religion ? selected.religion.label : ''}</div>
+<div class="text-med hidden" aria-hidden="true" bind:clientWidth={wBorn}>{selected.born ? selected.born.label : ''}</div>
+<div class="text-med hidden" aria-hidden="true" bind:clientWidth={wEnglish}>{selected.english ? selected.english.label : ''}</div>
 {/if}
 
+</Section>
+
+<ONSFooter/>
+
 <style>
-	@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
-	:global(body) {
-		font-family: 'Open Sans', sans-serif;
-	}
 	a {
 		color: rgb(0, 60, 87);
 	}
@@ -361,7 +449,9 @@
 	}
 	select {
 		margin: 0;
+		padding: 0 0.2em;
 		font-weight: bold;
+		background-color: #eee;
 	}
 	.btn {
 		padding: 2px 4px;
@@ -379,6 +469,11 @@
 		font-size: 2.2em;
 		font-weight: bold;
 	}
+	.text-med {
+		font-size: 1.8em;
+		font-weight: bold;
+		line-height: 1.7;
+	}
 	.text-small {
 		font-size: 0.85em;
 	}
@@ -390,24 +485,6 @@
 	}
 	.capitalise {
 		text-transform: capitalize;
-	}
-	.increase {
-		color: green;
-	}
-	.increase::before {
-		content: '▲';
-		color: green;
-	}
-	.decrease {
-		color: red;
-	}
-	.decrease::before {
-		content: '▼';
-		color: red;
-	}
-	.nochange {
-		font-size: 0.85em;
-		color: grey;
 	}
 	.line {
 		background-color: #27A0CC;
@@ -431,8 +508,8 @@
 	.mt {
 		margin-top: 20px;
 	}
-	.mts {
-		margin-top: 10px;
+	.mtl {
+		margin-top: 50px;
 	}
 	.mbs {
 		margin-bottom: 10px;

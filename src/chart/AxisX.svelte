@@ -19,7 +19,7 @@
 	export let textColor = '#555';
 	export let solid = false;
 	export let stagger = false;
-	export let median = false;
+	export let median = true;
 
 	$: isBandwidth = typeof $xScale.bandwidth === 'function';
 
@@ -28,7 +28,7 @@
 			$xScale.domain() :
 			$xScale.ticks(ticks);
 
-	$: textAnchor = (i) => {
+	function textAnchor(i) {
 		if (snapTicks === true) {
 			if (i === 0) {
 				return 'start';

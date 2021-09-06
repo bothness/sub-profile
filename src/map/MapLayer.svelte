@@ -73,9 +73,6 @@
 	// Updates "color" feature states for all geo codes
 	// Assumes that each data point has the colours defined on the colorCode key
 	function updateColors() {
-		console.log('updating colors...');
-		console.log(data.length);
-
 		data.forEach(d => {
 			map.setFeatureState({
 				source: source,
@@ -193,7 +190,7 @@
 				if (tooltip && state.name) {
 					popup
 						.setLngLat(e.lngLat)
-						.setHTML(`<strong>${state.name}</strong>${state.value ? "<br/>" + state.value.toFixed(1) + "%" : "<br/>No data"}`)
+						.setHTML(`<strong>${state.name}</strong>${state.value ? "<br/>" + state.value.toFixed(1) + "%" : "<br/>Data not available"}`)
 						.addTo(map);
 				}
       }
