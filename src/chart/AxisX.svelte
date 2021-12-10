@@ -19,7 +19,7 @@
 	export let textColor = '#555';
 	export let solid = false;
 	export let stagger = false;
-	export let median = true;
+	export let median = false;
 
 	$: isBandwidth = typeof $xScale.bandwidth === 'function';
 

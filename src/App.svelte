@@ -1,8 +1,8 @@
 <script>
   import { setContext } from "svelte";
 	import { ckmeans } from "simple-statistics";
-	import { getData, getGeo, getCSV, getColor, suffixer, changeClass, changeStr } from "./utils";
-	import { themes, urls, datasets, options, codes, mapStyle, msoaBldg, msoaBounds, colors, texts } from "./config";
+	import { getData, getGeo, getCSV, getTopo, getColor, suffixer, changeClass, changeStr } from "./utils";
+	import { themes, urls, datasets, vars, codes, mapStyle, ladBounds, colors, texts, arrow, spacer } from "./config";
 	import Warning from "./ui/Warning.svelte";
 	import ONSHeader from "./layout/ONSHeader.svelte";
 	import ONSFooter from "./layout/ONSFooter.svelte";
@@ -20,24 +20,28 @@
   setContext("theme", themes[theme]);
 	
 	// Elements
-	let w, wSex, wAge, wEthnicity, wReligion, wBorn, wEnglish, cols;
+	let w, cols;
 	let map = null;
 
 	// State
-	let selected = {
-		sex: options.sex[0],
-		age: options.age[0],
-		ethnicity: options.ethnicity[0],
-		religion: options.religion[0],
-		born: options.born[0],
-		english: options.english[0]
-	};
+	let active = null;
+	let active_cats = {};
+	let selected = [];
+	vars.forEach(d => {
+		active_cats[d.label] = d.cats[0];
+	});
 	let hovered = null;
+	let status = 'loading'; // Options: success, fail, loading
+	let u16 = false; // If age selection is 0-15 some tables won't show data
+	let varcount = 0; // Number of variables successfully loaded
+
+	$: ops = vars.filter(d => !selected.map(d => d.topic).includes(d.label));
 
 	// Data
 	let data = {
 		all: null,
 		selected: null,
+		geojson: null,
 		geoLookup: null,
 		geoCodes: null,
 		geoAll: null,
@@ -49,66 +53,96 @@
 		selected: null
 	}
 
+	function capitalise(str) {
+		return str.charAt(0).toUpperCase() + str.slice(1);
+	}
+	
+	function doSelect(topic) {
+		selected = [...selected, {topic: active.label, ...active_cats[topic]}];
+		active = null;
+		loadData();
+	}
+	
+	function unSelect(topic) {
+		selected = selected.filter(d => d.topic != topic);
+		loadData();
+	}
+
 	function loadData() {
+		status = 'loading';
+
+		if (selected && selected.map(d => d.code).includes('0-15')) {
+			u16 = true;
+		} else {
+			u16 = false;
+		}
+
 		getData(datasets, selected)
 		.then(json => {
-			sum.selected = makeSum(json.data.residents.health.values);
-			data.selected = json.data;
-			if (!data.all) {
-				data.all = data.selected;
-				sum.all = sum.selected;
-			}
-		});
-		getGeo(selected)
-		.then(json => {
-			let array = [];
-			let groups = null;
-
-			if (json.data.dataset.table.dimensions) {
-				let categories = json.data.dataset.table.dimensions[0].categories;
-			  let codes = categories.map(d => d.code.slice(-9));
-			
-			  let values = json.data.dataset.table.values;
-
-			  let index = {};
-			  codes.forEach((code, i) => {
-			  	index[code] = values[i];
-			  });
-			  if (!data.geoAll) {
-			  	data.geoAll = index;
-			  	data.geoCodes = codes;
-			  };
-
-			  data.geoCodes.forEach(code => {
-			  	array.push({code: code, name: data.geoLookup[code], value: index[code] ? (index[code] / data.geoAll[code]) * 100 : null});
-			  });
-
-			  let vals = array.map(d => d.value).filter(d => d != null);
-			  groups = vals[4] ? ckmeans(vals, 5) : null;
-			} else {
-				data.geoCodes.forEach(code => {
-			  	array.push({code: code, name: data.geoLookup[code], value: null});
-			  });
-			}
-
-			if (groups == null) {
-				array.forEach(d => d.color = colors.nodata);
-				data.geoBreaks = [0, 100];
-			} else if (!groups[1]) {
-				array.forEach(d => d.color = colors.seq[4]);
-				data.geoBreaks = [0, 100];
-			} else {
-				let breaks = [];
-				groups.forEach(grp => breaks.push(grp[0]));
-				breaks.push(groups[groups.length - 1][groups[groups.length - 1].length - 1]);
-				if (breaks[breaks.length - 1] == breaks[breaks.length - 2]) {
-					breaks.pop();
+			if (json.data.residents.age.values) {
+				sum.selected = makeSum(json.data.residents.health.values);
+				data.selected = json.data;
+				if (!data.all) {
+					data.all = data.selected;
+					sum.all = sum.selected;
 				}
-				array.forEach(d => d.color = d.value ? getColor(d.value, breaks, colors.seq) : colors.nodata);
-				data.geoBreaks = breaks;
-			}
 
-			data.geoPerc = array;
+				getGeo(selected)
+				.then(json => {
+					let array = [];
+					let groups = null;
+
+					if (json.data.dataset.table.dimensions) {
+						let categories = json.data.dataset.table.dimensions[0].categories;
+						let codes = categories.map(d => d.code.slice(-9));
+					
+						let values = json.data.dataset.table.values;
+
+						let index = {};
+						codes.forEach((code, i) => {
+							index[code] = values[i];
+						});
+						if (!data.geoAll) {
+							data.geoAll = index;
+							data.geoCodes = codes;
+						};
+
+						data.geoCodes.forEach(code => {
+							array.push({code: code, name: data.geoLookup[code], value: index[code] ? (index[code] / data.geoAll[code]) * 100 : null});
+						});
+
+						let vals = array.map(d => d.value).filter(d => d != null);
+						groups = vals[4] ? ckmeans(vals, 5) : null;
+					} else {
+						data.geoCodes.forEach(code => {
+							array.push({code: code, name: data.geoLookup[code], value: null});
+						});
+					}
+
+					if (groups == null) {
+						array.forEach(d => d.color = colors.nodata);
+						data.geoBreaks = [0, 100];
+					} else if (!groups[1]) {
+						array.forEach(d => d.color = colors.seq[4]);
+						data.geoBreaks = [0, 100];
+					} else {
+						let breaks = [];
+						groups.forEach(grp => breaks.push(grp[0]));
+						breaks.push(groups[groups.length - 1][groups[groups.length - 1].length - 1]);
+						if (breaks[breaks.length - 1] == breaks[breaks.length - 2]) {
+							breaks.pop();
+						}
+						array.forEach(d => d.color = d.value ? getColor(d.value, breaks, colors.seq) : colors.nodata);
+						data.geoBreaks = breaks;
+					}
+
+					data.geoPerc = array;
+					varcount = selected.length;
+					status = 'success';
+				});
+			} else {
+				status = 'failed';
+			}
 		});
 	}
 	
@@ -170,28 +204,20 @@
 		cols = w < 575 ? 1 : window.getComputedStyle(grid).getPropertyValue("grid-template-columns").split(" ").length;
 	}
 
-	function getWidth(val) {
-		let width = 200;
-		if (val) {
-			width =  val + 40;
-		}
-		return width
-	}
-
-	getCSV(urls.names)
+	getTopo(ladBounds.url, ladBounds.layer)
 	.then(json => {
+		console.log(json);
 		let index = {};
-		json.forEach(d => index[d.code] = d.name);
+		json.features.forEach(d => index[d.properties[ladBounds.code]] = d.properties[ladBounds.name]);
+		data.geojson = json;
 		data.geoLookup = index;
 		return data.geoLookup;
 	})
-	.then(lookup => {
+	.then(() => {
 		loadData();
 	});
 
-
 	$: w && onResize();
-	$: console.log(sum.selected);
 </script>
 
 <Warning/>
@@ -199,57 +225,56 @@
 
 <Section column="wide">
 
-<div class="grid mtl">
-	<div>
-		<span class="text-med">
-			<!-- svelte-ignore a11y-no-onchange -->
-			<select bind:value={selected.sex} on:change={loadData} style="width: {wSex && getWidth(wSex)}px">
-				{#each options.sex as item}
-				<option value={item}>{item.label}</option>
-				{/each}
-			</select>
-			aged 
-			<!-- svelte-ignore a11y-no-onchange -->
-			<select bind:value={selected.age} on:change={loadData} style="width: {wAge && getWidth(wAge)}px">
-				{#each options.age as item}
-				<option value={item}>{item.label}</option>
-				{/each}
-			</select>,
-			of
-			<!-- svelte-ignore a11y-no-onchange -->
-			<select bind:value={selected.ethnicity} on:change={loadData} style="width: {wEthnicity && getWidth(wEthnicity)}px">
-				{#each options.ethnicity as item}
-				<option value={item}>{item.label}</option>
-				{/each}
-			</select>
-			ethnicity, 
-			<!-- svelte-ignore a11y-no-onchange -->
-			<select bind:value={selected.religion} on:change={loadData} style="width: {wReligion && getWidth(wReligion)}px">
-				{#each options.religion as item}
-				<option value={item}>{item.label}</option>
-				{/each}
-			</select>
-			religion, born 
-			<!-- svelte-ignore a11y-no-onchange -->
-			<select bind:value={selected.born} on:change={loadData} style="width: {wBorn && getWidth(wBorn)}px">
-				{#each options.born as item}
-				<option value={item}>{item.label}</option>
-				{/each}
-			</select>, 
-			and speaking English 
-			<!-- svelte-ignore a11y-no-onchange -->
-			<select bind:value={selected.english} on:change={loadData} style="width: {wEnglish && getWidth(wEnglish)}px">
-				{#each options.english as item}
-				<option value={item}>{item.label}</option>
-				{/each}
-			</select>
-			.
-		</span>
-		{#if sum.all != sum.selected}
-		<br/>Compared with overall population of England and Wales
-		{/if}
-	</div>
+<h1 class="mtl">Key population explorer</h1>
+
+<p>Select one or more topics to define a population group to compare with the whole population of England and Wales.</p>
+
+<select bind:value={active} disabled={!ops[0]}>
+	<option value={null}>{!ops[0] ? 'No more topics available' : selected[0] ? 'Select another topic' : 'Select a topic'}</option>
+	{#each ops as op, i}
+	<option value={op}>{capitalise(op.label)}</option>
+	{/each}
+</select>
+
+{#if active}
+<select bind:value={active_cats[active.label]}>
+	{#each active.cats as cat}
+	<option value={cat}>{@html cat.indent ? Array.from({length: cat.indent - 1}, v => spacer).join('') + arrow : ''}{capitalise(cat.label)}</option>
+	{/each}
+</select>
+<button class="btn" on:mouseup={() => doSelect(active.label)}>
+	Add
+</button>
+{/if}
+
+{#if selected[0]}
+<br/>
+{#each selected as item, i}
+{#if status == 'loading' && i == selected.length - 1}
+<div class="chip chip-pending">
+	<span>{capitalise(item.topic)}: {capitalise(item.label)}</span>
+	<div class="loader"/>
 </div>
+{:else}
+<div class="chip" class:chip-inactive={i >= varcount}>
+	<span>{capitalise(item.topic)}: {capitalise(item.label)}</span>
+	<button class="btn-pill" on:click="{() => unSelect(item.topic)}"/>
+</div>
+{/if}
+{/each}
+{/if}
+
+{#if status == "failed" || u16 == true}
+<div class="warning">
+	Some datasets not available for selected variables.
+	{#if status == "failed"}
+	Try removing a variable to see more datasets.
+	{/if}
+	{#if u16 == true}
+	Economic indicators (employment, social status etc) not available for ages 0 to 15.
+	{/if}
+</div>
+{/if}
 
 {#if data.all && data.selected && sum.all && sum.selected >= 0}
 <div id="grid" class="grid mt" bind:clientWidth={w}>
@@ -271,7 +296,7 @@
 		<span class="inline text-big">{getMedianAge(data.selected)}</span>
 		<span class="inline text-small">years</span>
 		{#if sum.all != sum.selected}
-		<div class="text-small muted">vs {getMedianAge(data.all)} years for overall population</div>
+		<div class="text-small muted">vs {getMedianAge(data.all)} years for whole population</div>
 		{/if}
 		{/if}
 	</div>
@@ -282,21 +307,24 @@
 			<SpineChart ticks={data.geoBreaks} data={hovered && data.geoPerc.find(d => d.code == hovered) ? [{x: data.geoPerc.find(d => d.code == hovered).value}] : []} colors={data.geoBreaks[1] == 100 ? [colors.seq[4]] : colors.seq}/>
 			{/if}
 		</div>
-		<Map bind:map style={mapStyle} location={{ lon: -1.8904, lat: 52.4862, zoom: 10 }}>
-			{#if data.geoPerc}
+		<Map bind:map style={mapStyle}>
+			{#if data.geojson && data.geoPerc}
 			<MapSource
-				id="msoa-buildings"
-				type="vector"
-				url={msoaBldg.url}
-				layer={msoaBldg.layer}
-				promoteId={msoaBldg.code}
-				maxzoom={13}
+				id="lad"
+				type="geojson"
+				data={data.geojson}
+				promoteId={ladBounds.code}
 			>
 				<MapLayer
-					id="msoa-buildings"
+					id="lad-fill"
 					data={data.geoPerc}
 					geoCode="code"
+					nameCode="name"
 					colorCode="color"
+					valueCode="value"
+					hover={true}
+					bind:hovered={hovered}
+					tooltip={true}
 					type="fill"
 					paint={{
 						"fill-color": [
@@ -305,35 +333,12 @@
 							["feature-state", "color"],
 							"rgba(255, 255, 255, 0)",
 						],
-					}}
-					order="aeroway-taxiway"
-				/>
-			</MapSource>
-			<MapSource
-				id="msoa-bounds"
-				type="vector"
-				url={msoaBounds.url}
-				layer={msoaBounds.layer}
-				promoteId={msoaBounds.code}
-				maxzoom={13}
-			>
-				<MapLayer
-					id="msoa-fill"
-					data={data.geoPerc}
-					geoCode="code"
-					nameCode="name"
-					valueCode="value"
-					hover={true}
-					bind:hovered={hovered}
-					tooltip={true}
-					type="fill"
-					paint={{
-						"fill-color": "rgba(255, 255, 255, 0)",
+						"fill-opacity": 0.8
 					}}
 					order="highway_name_other"
 				/>
 				<MapLayer
-					id="msoa-line"
+					id="lad-line"
 					type="line"
 					paint={{
 						"line-color": "orange",
@@ -427,13 +432,6 @@
 		{/if}
 	</div>
 </div>
-
-<div class="text-med hidden" aria-hidden="true" bind:clientWidth={wSex}>{selected.sex ? selected.sex.label : ''}</div>
-<div class="text-med hidden" aria-hidden="true" bind:clientWidth={wAge}>{selected.age ? selected.age.label : ''}</div>
-<div class="text-med hidden" aria-hidden="true" bind:clientWidth={wEthnicity}>{selected.ethnicity ? selected.ethnicity.label : ''}</div>
-<div class="text-med hidden" aria-hidden="true" bind:clientWidth={wReligion}>{selected.religion ? selected.religion.label : ''}</div>
-<div class="text-med hidden" aria-hidden="true" bind:clientWidth={wBorn}>{selected.born ? selected.born.label : ''}</div>
-<div class="text-med hidden" aria-hidden="true" bind:clientWidth={wEnglish}>{selected.english ? selected.english.label : ''}</div>
 {/if}
 
 </Section>
@@ -446,12 +444,6 @@
 	}
 	img {
 		width: 200px;
-	}
-	select {
-		margin: 0;
-		padding: 0 0.2em;
-		font-weight: bold;
-		background-color: #eee;
 	}
 	.btn {
 		padding: 2px 4px;
@@ -529,15 +521,106 @@
 		position: relative;
 		width: 100%;
 	}
-	.hidden {
-		position: absolute;
-		display: inline-block;
-		top: -1000px;
-		height: 0;
-		line-height: 0;
-	}
 	#map {
 		grid-row: span 3;
 		min-height: 450px;
 	}
-	</style>
+
+	h1 {
+		font-weight: bold;
+	}
+	select {
+		appearance: none;
+		background: white url("https://ons-design-system.netlify.app/img/icons--chevron-down.svg") padding-box no-repeat;
+		background-position: calc(100% - 10px) 50%;
+		background-size: 18px;
+		border: 1.5px solid rgb(34, 34, 34);
+		outline: 1.5px solid white;
+		border-radius: 3px;
+		padding: 7px 36px 7px 9px;
+		margin-top: 12px;
+	}
+	select:focus {
+		outline-color: rgb(34, 34, 34);
+		box-shadow: 0 0 0 4px orange;
+	}
+	button {
+		cursor: pointer;
+	}
+	.btn {
+		color: white;
+		background: #0f8243;
+		font-weight: bold;
+		border: 0;
+		border-radius: 3px;
+		box-shadow: 0 3px #193c23;
+		padding: 7px 20px;
+		transform: translate(0, -1.5px);
+	}
+	.btn:hover {
+		background-color: #30693c;
+	}
+	.btn:active {
+		box-shadow: none;
+		transform: translate(0, 1.5px);
+	}
+	.warning {
+		background-color: rgb(250, 230, 232);
+		border: none;
+		border-left: 5px solid #d0021b;
+		padding: 10px;
+		font-size: 0.9rem;
+	}
+	.chip {
+		display: inline-flex;
+		vertical-align: middle;
+		background-color: rgb(231, 243, 236);
+		font-size: 0.9rem;
+		border: 1.5px solid #0f8243;
+		border-radius: 20px;
+		padding: 5px;
+		margin: 0 5px 5px 0;
+	}
+	.chip-inactive {
+		background-color: rgb(250, 230, 232);
+		border-color: #d0021b;
+	}
+	.chip-pending {
+		background-color: #fef4ee;
+		border-color: #ff803b;
+	}
+	.chip span {
+		padding: 0 10px;
+	}
+	.chip button {
+		background: #0f8243 url("https://bothness.github.io/geo-draw/img/x-close.svg") no-repeat center;
+		margin: 0;
+		width: 20px;
+		height: 20px;
+		border: none;
+		border-radius: 50%;
+	}
+	.chip-inactive button {
+		background-color: #d0021b;
+	}
+	.loader {
+		box-sizing: border-box;
+		border: 5px solid rgba(0,0,0,0.2);
+		border-radius: 50%;
+		border-top: 5px solid #ff803b;
+		border-right: 5px solid #ff803b;
+		width: 20px;
+		height: 20px;
+		-webkit-animation: spin 2s linear infinite; /* Safari */
+		animation: spin .75s linear infinite;
+	}
+	/* Safari */
+	@-webkit-keyframes spin {
+		0% { -webkit-transform: rotate(0deg); }
+		100% { -webkit-transform: rotate(360deg); }
+	}
+	@keyframes spin {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+	}
+</style>

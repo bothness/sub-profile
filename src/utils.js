@@ -1,4 +1,5 @@
 import { csvParse, autoType } from 'd3-dsv';
+import { feature } from 'topojson-client';
 
 const endpoint = 'https://ftb-api-ext.ons.sensiblecode.io/graphql';
 const frag = `
@@ -24,22 +25,23 @@ export async function getCSV(url) {
   return csvParse(string, autoType);
 }
 
-export async function getData(datasets, selected = null) {
+export async function getData(datasets, sel = []) {
+  let selected = sel[0] ? [...sel].sort((a, b) => a.topic.localeCompare(b.topic)) : [...sel];
+
   let variables = [];
   let filters = [];
   let altVariables = [];
   let altFilters = [];
 
-  if (selected) {
-    let keys = Object.keys(selected);
-    keys.forEach(key => {
-      if (selected[key].var) {
-        variables.push(selected[key].var);
-        filters.push(`{variable: "${selected[key].var}", codes: ["${selected[key].code}"]}`);
+  if (selected[0]) {
+    selected.forEach(item => {
+      if (item.var) {
+        variables.push(item.var);
+        filters.push(`{variable: "${item.var}", codes: ["${item.code}"]}`);
         
-        if (key != 'age') {
-          altVariables.push(selected[key].var);
-          altFilters.push(`{variable: "${selected[key].var}", codes: ["${selected[key].code}"]}`);
+        if (item.topic != "age") {
+          altVariables.push(item.var);
+          altFilters.push(`{variable: "${item.var}", codes: ["${item.code}"]}`);
         }
       }
     });
@@ -90,10 +92,11 @@ export async function getData(datasets, selected = null) {
 	let response = await fetch(endpoint, ops);
   let json = await response.json();
 
-  // Hack for filtering single year age data
-  if (selected.age.code && json.data.residents.age.values) {
+  // Hack for filtering single year age dat
+  let ageSelection = selected.filter(d => d.topic == "age");
+  if (ageSelection[0] && json.data.residents.age.values) {
     let ages = [...json.data.residents.age.values];
-    let cells = selected.age.code.split('-');
+    let cells = ageSelection[0].code.split('-');
     cells.forEach((d, i) => cells[i] = +d);
     ages.forEach((d, i) => ages[i] = i >= cells[0] && i <= cells[1] ? d : 0);
     json.data.residents.age.values = ages;
@@ -102,15 +105,15 @@ export async function getData(datasets, selected = null) {
   return json;
 }
 
-export async function getGeo(selected = null) {
+export async function getGeo(sel = []) {
+  let selected = sel[0] ? [...sel].sort((a, b) => a.topic.localeCompare(b.topic)) : [...sel];
   let variables = [];
   let filters = [];
-  if (selected) {
-    let keys = Object.keys(selected);
-    keys.forEach(key => {
-      if (selected[key].var) {
-        variables.push(selected[key].var);
-        filters.push(`{variable: "${selected[key].var}", codes: ["${selected[key].code}"]}`);
+  if (selected[0]) {
+    selected.forEach(item => {
+      if (item.var) {
+        variables.push(item.var);
+        filters.push(`{variable: "${item.var}", codes: ["${item.code}"]}`);
       }
     });
   }
@@ -121,7 +124,7 @@ export async function getGeo(selected = null) {
   query {
     dataset(name:"Usual-Residents") {
       table(
-        variables: ["MSOA"${vars}]
+        variables: ["LA"${vars}]
         filters: ${filters}
       )
       {
@@ -165,4 +168,11 @@ export function changeClass(val) {
 
 export function changeStr(val, suffix = '', decimals = 0) {
   return val != 0 ? Math.abs(val).toFixed(decimals) + suffix : suffix == 'pp' ? 'n/c' : 'no change';
+}
+
+export async function getTopo(url, layer) {
+  let response = await fetch(url);
+  let json = await response.json();
+  let geojson = await feature(json, layer);
+  return geojson;
 }

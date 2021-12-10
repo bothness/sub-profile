@@ -5,7 +5,14 @@
 </nav>
 
 <style>
+  :global(body) {
+    margin-top: 42px;
+  }
   .warning {
+    position: fixed;
+    z-index: 100;
+    top: 0;
+    width: 100%;
     color: white;
     background-color: #bb3333;
     margin-bottom: 10px;

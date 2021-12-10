@@ -29,6 +29,8 @@ export const colors = {
 	seq: ["#d5f690", "#5bc4b1", "#2e9daa", "#0079a2", "#005583"],
 	nodata: "#999"
 };
+export const spacer = '&nbsp;&nbsp;&nbsp;&nbsp;';
+export const arrow = '&rtrif;&nbsp;&nbsp;'
 
 export const datasets = [
 	{
@@ -53,66 +55,265 @@ export const datasets = [
 	}
 ];
 
-export const options = {
-	sex: [
-		{label: 'People'},
-		{var: 'SEX', code: '2', label: 'Females'},
-		{var: 'SEX', code: '1', label: 'Males'}
-	],
-	ethnicity: [
-		{label: 'any'},
-		{var: 'ETHPUK11_T006A', code: '1-4', label: 'white (all)'},
-		{var: 'ETHNICITYEW', code: '1', label: 'white UK'},
-		{var: 'ETHNICITYEW', code: '2', label: 'white Irish'},
-		{var: 'ETHNICITYEW', code: '3', label: 'white Gypsy/traveller'},
-		{var: 'ETHPUK11_T006A', code: '5-8', label: 'mixed (all)'},
-		{var: 'ETHNICITYEW', code: '5', label: 'mixed Caribbean/white'},
-		{var: 'ETHNICITYEW', code: '6', label: 'mixed African/white'},
-		{var: 'ETHNICITYEW', code: '7', label: 'mixed Asian/white'},
-		{var: 'ETHPUK11_T006A', code: '9-13', label: 'Asian (all)'},
-		{var: 'ETHNICITYEW', code: '9', label: 'Indian'},
-		{var: 'ETHNICITYEW', code: '10', label: 'Pakistani'},
-		{var: 'ETHNICITYEW', code: '11', label: 'Bangladeshi'},
-		{var: 'ETHNICITYEW', code: '12', label: 'Chinese'},
-		{var: 'ETHPUK11_T006A', code: '14-16', label: 'black (all)'},
-		{var: 'ETHNICITYEW', code: '14', label: 'black African'},
-		{var: 'ETHNICITYEW', code: '15', label: 'black Caribbean'},
-		{var: 'ETHNICITYEW', code: '17', label: 'Arab'},
-		{var: 'ETHNICITYEW', code: '18', label: 'other'}
-	],
-	born: [
-		{label: 'anywhere'},
-		{var: 'COB_T003B', code: '1-5', label: 'in UK'},
-		{var: 'COB_T003B', code: '6-26', label: 'outside UK'}
-	],
-	religion: [
-		{label: 'any'},
-		{var: 'RELIGIONEW', code: '1', label: 'no'},
-		{var: 'RELIGIONEW', code: '2', label: 'Christian'},
-		{var: 'RELIGIONEW', code: '3', label: 'Buddhist'},
-		{var: 'RELIGIONEW', code: '4', label: 'Hindu'},
-		{var: 'RELIGIONEW', code: '5', label: 'Jewish'},
-		{var: 'RELIGIONEW', code: '6', label: 'Muslim'},
-		{var: 'RELIGIONEW', code: '7', label: 'Sikh'},
-		{var: 'RELIGIONEW', code: '8', label: 'other'},
-		{var: 'RELIGIONEW', code: '9', label: 'unstated'}
-	],
-	english: [
-		{label: 'or not'},
-		{var: 'LANGPRF_R006A', code: '1', label: 'natively'},
-		{var: 'LANGPRF_R006A', code: '2', label: 'very well'},
-		{var: 'LANGPRF_R006A', code: '3', label: 'well'},
-		{var: 'LANGPRF_R006A', code: '4', label: 'not well'},
-		{var: 'LANGPRF_R006A', code: '5', label: 'not at all'}
-	],
-	age: [
-		{label: "any age"},
-		{var: 'AGE_T005B', code: '0-15', label: '0 to 15'},
-		{var: 'AGE_T005B', code: '16-49', label: '16 to 49'},
-		{var: 'AGE_T005B', code: '50-64', label: '50 to 64'},
-		{var: 'AGE_T005B', code: '65-90', label: '65 plus'}
-	]
-}
+export const vars = [
+	{
+		label: "sex",
+		cats: [
+			{var: 'SEX', code: '2', label: 'female'},
+			{var: 'SEX', code: '1', label: 'male'}
+		]
+	},
+	{
+		label: "ethnicity",
+		cats: [
+			{var: 'ETHPUK11_T006A', code: '1-4', label: 'white'},
+			{var: 'ETHNICITYEW', code: '1', label: 'white UK', indent: 1},
+			{var: 'ETHNICITYEW', code: '2', label: 'white Irish', indent: 1},
+			{var: 'ETHNICITYEW', code: '3', label: 'white Gypsy/traveller', indent: 1},
+			{var: 'ETHPUK11_T006A', code: '5-8', label: 'mixed'},
+			{var: 'ETHNICITYEW', code: '5', label: 'mixed Caribbean/white', indent: 1},
+			{var: 'ETHNICITYEW', code: '6', label: 'mixed African/white', indent: 1},
+			{var: 'ETHNICITYEW', code: '7', label: 'mixed Asian/white', indent: 1},
+			{var: 'ETHPUK11_T006A', code: '9-13', label: 'Asian'},
+			{var: 'ETHNICITYEW', code: '9', label: 'Indian', indent: 1},
+			{var: 'ETHNICITYEW', code: '10', label: 'Pakistani', indent: 1},
+			{var: 'ETHNICITYEW', code: '11', label: 'Bangladeshi', indent: 1},
+			{var: 'ETHNICITYEW', code: '12', label: 'Chinese', indent: 1},
+			{var: 'ETHPUK11_T006A', code: '14-16', label: 'black'},
+			{var: 'ETHNICITYEW', code: '14', label: 'black African', indent: 1},
+			{var: 'ETHNICITYEW', code: '15', label: 'black Caribbean', indent: 1},
+			{var: 'ETHPUK11_T006A', code: '17-18', label: 'other'},
+			{var: 'ETHNICITYEW', code: '17', label: 'Arab', indent: 1},
+			{var: 'ETHNICITYEW', code: '18', label: 'other', indent: 1}
+		]
+	},
+	{
+		label: "place of birth",
+		cats: [
+			{var: 'COB_T003B', code: '1-5', label: 'United Kingdom'},
+			{
+				var: "COBG",
+				indent: 1,
+				code: "1",
+				label: "England"
+			},
+			{
+				var: "COBG",
+				indent: 1,
+				code: "2",
+				label: "Scotland"
+			},
+			{
+				var: "COBG",
+				indent: 1,
+				code: "3",
+				label: "Northern Ireland"
+			},
+			{
+				var: "COBG",
+				indent: 1,
+				code: "4",
+				label: "Wales"
+			},
+			{
+				var: "COBG",
+				indent: 1,
+				code: "5",
+				label: "United Kingdom not otherwise specified"
+			},
+			{var: 'COB_T003B', code: '6-26', label: 'outside the UK'},
+			{
+				var: "COBG",
+				indent: 1,
+				code: "6",
+				label: "Ireland"
+			},
+			{
+				var: "COB_R010A",
+				code: "7,9",
+				indent: 1,
+				label: "EU countries since 2001"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "7",
+				label: "Germany"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "9",
+				label: "Other EU countries since 2001"
+			},
+			{
+				var: "COB_R010A",
+				code: "8,10",
+				indent: 1,
+				label: "EU countries since 2011"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "8",
+				label: "Poland"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "10",
+				label: "Other EU countries since 2011"
+			},
+			{
+				var: "COBG",
+				indent: 1,
+				code: "11",
+				label: "Rest of Europe"
+			},
+			{
+				var: "COB_R010A",
+				indent: 1,
+				code: "12-15",
+				label: "Africa"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "12",
+				label: "North Africa"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "13",
+				label: "Central and Western Africa"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "14",
+				label: "South and Eastern Africa"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "15",
+				label: "Africa not otherwise specified"
+			},
+			{
+				var: "COB_R010A",
+				code: "16-23",
+				indent: 1,
+				label: "Middle East and Asia"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "16",
+				label: "Middle East"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "17",
+				label: "Eastern Asia"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "18",
+				label: "Bangladesh"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "19",
+				label: "India"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "20",
+				label: "Pakistan"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "21",
+				label: "Rest of Southern Asia"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "22",
+				label: "Middle East and Asia: South-East Asia"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "23",
+				label: "Middle East and Asia: Central Asia"
+			},
+			{
+				var: "COB_R010A",
+				code: "24-25",
+				indent: 1,
+				label: "The Americas and the Caribbean"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "24",
+				label: "North America and the Caribbean"
+			},
+			{
+				var: "COBG",
+				indent: 2,
+				code: "25",
+				label: "Central and South America"
+			},
+			{
+				var: "COBG",
+				indent: 1,
+				code: "26",
+				label: "Antarctica, Oceania (including Australasia) and other"
+			}
+		]
+	},
+	{
+		label: "religion",
+		cats: [
+			{var: 'RELIGIONEW', code: '1', label: 'no religion'},
+			{var: 'RELIGIONEW', code: '2', label: 'Christian'},
+			{var: 'RELIGIONEW', code: '3', label: 'Buddhist'},
+			{var: 'RELIGIONEW', code: '4', label: 'Hindu'},
+			{var: 'RELIGIONEW', code: '5', label: 'Jewish'},
+			{var: 'RELIGIONEW', code: '6', label: 'Muslim'},
+			{var: 'RELIGIONEW', code: '7', label: 'Sikh'},
+			{var: 'RELIGIONEW', code: '8', label: 'Other'},
+			{var: 'RELIGIONEW', code: '9', label: 'not stated'}
+		]
+	},
+	{
+		label: "english proficiency",
+		cats: [
+			{var: 'LANGPRF_R006A', code: '1', label: 'native speaker'},
+			{var: 'LANGPRF_R006A', code: '2', label: 'speaks very well'},
+			{var: 'LANGPRF_R006A', code: '3', label: 'speaks well'},
+			{var: 'LANGPRF_R006A', code: '4', label: 'cannot speak well'},
+			{var: 'LANGPRF_R006A', code: '5', label: 'speaks no English'}
+		]
+	},
+	{
+		label: "age",
+		cats: [
+			{var: 'AGE_T005B', code: '0-15', label: '0 to 15'},
+			{var: 'AGE_T005B', code: '16-49', label: '16 to 49'},
+			{var: 'AGE_T005B', code: '50-64', label: '50 to 64'},
+			{var: 'AGE_T005B', code: '65-90', label: '65 plus'}
+		]
+	}
+];
 
 export const codes = {
 	age: [
@@ -179,13 +380,9 @@ export const codes = {
 };
 
 export const mapStyle = 'https://bothness.github.io/ons-basemaps/data/style-omt.json';
-export const msoaBldg = {
-	url: "https://cdn.ons.gov.uk/maptiles/buildings/v1/{z}/{x}/{y}.pbf",
-	layer: "buildings",
-	code: "msoa11cd"
-};
-export const msoaBounds = {
-	url: "https://cdn.ons.gov.uk/maptiles/administrative/msoa/v2/boundaries/{z}/{x}/{y}.pbf",
-	layer: "msoa",
-	code: "areacd"
-};
+export const ladBounds = {
+	url: "./data/lad2015.json",
+	layer: "LAD15merc",
+	code: "AREACD",
+	name: "AREANM"
+}
