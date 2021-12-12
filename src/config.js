@@ -16,7 +16,7 @@ export const themes = {
 };
 
 export const texts = {
-	comparison: 'vs overall population',
+	comparison: 'vs whole population',
 	nodata: 'Data not available.'
 };
 
@@ -42,7 +42,8 @@ export const datasets = [
 			{ key: 'travel', code: 'TRANSPORT' },
 			{ key: 'distance', code: 'AGGDTWPEW11_R010A' },
 			{ key: 'health', code: 'HEALTH' },
-			{ key: 'grade', code: 'SCGPUK11C' }
+			{ key: 'grade', code: 'SCGPUK11C' },
+			{ key: 'marital', code: "MARSTAT"}
 		]
 	},
 	{
@@ -88,196 +89,41 @@ export const vars = [
 		]
 	},
 	{
-		label: "place of birth",
+		label: "country of birth",
 		cats: [
 			{var: 'COB_T003B', code: '1-5', label: 'United Kingdom'},
-			{
-				var: "COBG",
-				indent: 1,
-				code: "1",
-				label: "England"
-			},
-			{
-				var: "COBG",
-				indent: 1,
-				code: "2",
-				label: "Scotland"
-			},
-			{
-				var: "COBG",
-				indent: 1,
-				code: "3",
-				label: "Northern Ireland"
-			},
-			{
-				var: "COBG",
-				indent: 1,
-				code: "4",
-				label: "Wales"
-			},
-			{
-				var: "COBG",
-				indent: 1,
-				code: "5",
-				label: "United Kingdom not otherwise specified"
-			},
-			{var: 'COB_T003B', code: '6-26', label: 'outside the UK'},
-			{
-				var: "COBG",
-				indent: 1,
-				code: "6",
-				label: "Ireland"
-			},
-			{
-				var: "COB_R010A",
-				code: "7,9",
-				indent: 1,
-				label: "EU countries since 2001"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "7",
-				label: "Germany"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "9",
-				label: "Other EU countries since 2001"
-			},
-			{
-				var: "COB_R010A",
-				code: "8,10",
-				indent: 1,
-				label: "EU countries since 2011"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "8",
-				label: "Poland"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "10",
-				label: "Other EU countries since 2011"
-			},
-			{
-				var: "COBG",
-				indent: 1,
-				code: "11",
-				label: "Rest of Europe"
-			},
-			{
-				var: "COB_R010A",
-				indent: 1,
-				code: "12-15",
-				label: "Africa"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "12",
-				label: "North Africa"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "13",
-				label: "Central and Western Africa"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "14",
-				label: "South and Eastern Africa"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "15",
-				label: "Africa not otherwise specified"
-			},
-			{
-				var: "COB_R010A",
-				code: "16-23",
-				indent: 1,
-				label: "Middle East and Asia"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "16",
-				label: "Middle East"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "17",
-				label: "Eastern Asia"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "18",
-				label: "Bangladesh"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "19",
-				label: "India"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "20",
-				label: "Pakistan"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "21",
-				label: "Rest of Southern Asia"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "22",
-				label: "Middle East and Asia: South-East Asia"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "23",
-				label: "Middle East and Asia: Central Asia"
-			},
-			{
-				var: "COB_R010A",
-				code: "24-25",
-				indent: 1,
-				label: "The Americas and the Caribbean"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "24",
-				label: "North America and the Caribbean"
-			},
-			{
-				var: "COBG",
-				indent: 2,
-				code: "25",
-				label: "Central and South America"
-			},
-			{
-				var: "COBG",
-				indent: 1,
-				code: "26",
-				label: "Antarctica, Oceania (including Australasia) and other"
-			}
+			{var:"COBG",indent:1,code:"1",label:"England"},
+			{var:"COBG",indent:1,code:"2",label:"Scotland"},
+			{var:"COBG",indent:1,code:"3",label:"Northern Ireland"},
+			{var:"COBG",indent:1,code:"4",label:"Wales"},
+			{var:"COBG",indent:1,code:"5",label:"United Kingdom not otherwise specified"},
+			{var:"COB_T003B",code:"6-26",label:"outside the UK"},
+			{var:"COBG",indent:1,code:"6",label:"Ireland"},
+			{var:"COB_R010A",code:"7,9",indent:1,label:"EU countries as of 2001"},
+			{var:"COBG",indent:2,code:"7",label:"Germany"},
+			{var:"COBG",indent:2,code:"9",label:"Other EU countries as of 2001"},
+			{var:"COB_R010A",code:"8,10",indent:1,label:"EU countries as of 2011"},
+			{var:"COBG",indent:2,code:"8",label:"Poland"},
+			{var:"COBG",indent:2,code:"10",label:"Other EU countries as of 2011"},
+			{var:"COBG",indent:1,code:"11",label:"Rest of Europe"},
+			{var:"COB_R010A",indent:1,code:"12-15",label:"Africa"},
+			{var:"COBG",indent:2,code:"12",label:"North Africa"},
+			{var:"COBG",indent:2,code:"13",label:"Central and Western Africa"},
+			{var:"COBG",indent:2,code:"14",label:"South and Eastern Africa"},
+			{var:"COBG",indent:2,code:"15",label:"Africa not otherwise specified"},
+			{var:"COB_R010A",code:"16-23",indent:1,label:"Middle East and Asia"},
+			{var:"COBG",indent:2,code:"16",label:"Middle East"},
+			{var:"COBG",indent:2,code:"17",label:"Eastern Asia"},
+			{var:"COBG",indent:2,code:"18",label:"Bangladesh"},
+			{var:"COBG",indent:2,code:"19",label:"India"},
+			{var:"COBG",indent:2,code:"20",label:"Pakistan"},
+			{var:"COBG",indent:2,code:"21",label:"Rest of Southern Asia"},
+			{var:"COBG",indent:2,code:"22",label:"Middle East and Asia: South-East Asia"},
+			{var:"COBG",indent:2,code:"23",label:"Middle East and Asia: Central Asia"},
+			{var:"COB_R010A",code:"24-25",indent:1,label:"The Americas and the Caribbean"},
+			{var:"COBG",indent:2,code:"24",label:"North America and the Caribbean"},
+			{var:"COBG",indent:2,code:"25",label:"Central and South America"},
+			{var:"COBG",indent:1,code:"26",label:"Antarctica, Oceania and other"}
 		]
 	},
 	{
@@ -285,35 +131,114 @@ export const vars = [
 		cats: [
 			{var: 'RELIGIONEW', code: '1', label: 'no religion'},
 			{var: 'RELIGIONEW', code: '2', label: 'Christian'},
-			{var: 'RELIGIONEW', code: '3', label: 'Buddhist'},
-			{var: 'RELIGIONEW', code: '4', label: 'Hindu'},
-			{var: 'RELIGIONEW', code: '5', label: 'Jewish'},
-			{var: 'RELIGIONEW', code: '6', label: 'Muslim'},
-			{var: 'RELIGIONEW', code: '7', label: 'Sikh'},
-			{var: 'RELIGIONEW', code: '8', label: 'Other'},
+			{var: 'RELPUK11_R005A', code: '3-8', label: 'other religion'},
+			{var: 'RELIGIONEW', code: '3', label: 'Buddhist', indent: 1},
+			{var: 'RELIGIONEW', code: '4', label: 'Hindu', indent: 1},
+			{var: 'RELIGIONEW', code: '5', label: 'Jewish', indent: 1},
+			{var: 'RELIGIONEW', code: '6', label: 'Muslim', indent: 1},
+			{var: 'RELIGIONEW', code: '7', label: 'Sikh', indent: 1},
+			{var: 'RELIGIONEW', code: '8', label: 'other', indent: 1},
 			{var: 'RELIGIONEW', code: '9', label: 'not stated'}
 		]
 	},
 	{
-		label: "english proficiency",
+		label: "English proficiency",
 		cats: [
-			{var: 'LANGPRF_R006A', code: '1', label: 'native speaker'},
-			{var: 'LANGPRF_R006A', code: '2', label: 'speaks very well'},
-			{var: 'LANGPRF_R006A', code: '3', label: 'speaks well'},
-			{var: 'LANGPRF_R006A', code: '4', label: 'cannot speak well'},
+			{var: 'LANGPRF_R006A', code: '1', label: 'English is main language'},
+			{var: 'LANGPRF_R006A', code: '2', label: 'speaks English very well'},
+			{var: 'LANGPRF_R006A', code: '3', label: 'speaks English well'},
+			{var: 'LANGPRF_R006A', code: '4', label: 'cannot speak English well'},
 			{var: 'LANGPRF_R006A', code: '5', label: 'speaks no English'}
 		]
 	},
 	{
-		label: "age",
+		label: "age group",
 		cats: [
 			{var: 'AGE_T005B', code: '0-15', label: '0 to 15'},
 			{var: 'AGE_T005B', code: '16-49', label: '16 to 49'},
 			{var: 'AGE_T005B', code: '50-64', label: '50 to 64'},
 			{var: 'AGE_T005B', code: '65-90', label: '65 plus'}
 		]
+	},
+	{
+		label:"arrival in UK",
+		cats: [
+			{var: 'YRARRPUK11_R006A', code: '1', label: 'Born in the UK'},
+			{var: 'YRARRPUK11_R006A', code: '2', label: 'Before 1981'},
+			{var: 'YRARRPUK11_R011A', code: '2', label: 'Before 1961', indent: 1},
+			{var: 'YRARRPUK11_R011A', code: '3', label: '1961-1970', indent: 1},
+			{var: 'YRARRPUK11_R011A', code: '3', label: '1971-1980', indent: 1},
+			{var: 'YRARRPUK11_R006A', code: '3', label: '1981-1990'},
+			{var: 'YRARRPUK11_R006A', code: '4', label: '1991-2000'},
+			{var: 'YRARRPUK11_R006A', code: '5', label: '2001-2011'},
+			{var: 'YRARRPUK11_R011A', code: '7', label: '2001-2003', indent: 1},
+			{var: 'YRARRPUK11_R011A', code: '8', label: '2004-2006', indent: 1},
+			{var: 'YRARRPUK11_R011A', code: '9', label: '2007-2009', indent: 1},
+			{var: 'YRARRPUK11_R011A', code: '10', label: '2010-2011', indent: 1}
+		]
+	},
+	{
+		label: "passport held",
+		cats: [
+			{var: 'PSSPUK_R004A', code: '1', label: 'UK passport'},
+			{var: 'PSSPUK_R004A', code: '2-41', label: 'non-UK passport'},
+			{var: 'PSSPUK_R011A', code: "2", indent: 1, label: "Ireland"},
+			{var: 'PSSPUK_R011A', code: "3-7", indent: 1, label: "EU countries as of 2001"},
+			{var: 'PSSPUK', code: "3", indent: 2, label: "France"},
+			{var: 'PSSPUK', code: "4", indent: 2, label: "Germany"},
+			{var: 'PSSPUK', code: "5", indent: 2, label: "Italy"},
+			{var: 'PSSPUK', code: "6", indent: 2, label: "Portugal"},
+			{var: 'PSSPUK', code: "7", indent: 2, label: "other EU countries as of 2001"},
+			{var: 'PSSPUK_R011A', code: "8-10", indent: 1, label: "EU countries as of 2011"},
+			{var: 'PSSPUK', code: "8", indent: 2, label: "Lithuania"},
+			{var: 'PSSPUK', code: "9", indent: 2, label: "Poland"},
+			{var: 'PSSPUK', code: "10", indent: 2, label: "other EU countries as of 2011"},
+			{var: 'PSSPUK_R011A', code: "11", indent: 1, label: "Rest of Europe"},
+			{var: 'PSSPUK_R011A', code: "12-20", indent: 1, label: "Africa"},
+			{var: 'PSSPUK_R018A', code: "12", indent: 2, label: "North Africa"},
+			{var: 'PSSPUK_R018A', code: "13-15", indent: 2, label: "Central and Western Africa"},
+			{var: 'PSSPUK', code: "13", indent: 3, label: "Ghana"},
+			{var: 'PSSPUK', code: "14", indent: 3, label: "Nigeria"},
+			{var: 'PSSPUK', code: "15", indent: 3, label: "Central Africa & other Western Africa"},
+			{var: 'PSSPUK_R018A', code: "16-20", indent: 2, label: "South and Eastern Africa"},
+			{var: 'PSSPUK', code: "16", indent: 3, label: "Kenya"},
+			{var: 'PSSPUK', code: "17", indent: 3, label: "Somalia"},
+			{var: 'PSSPUK', code: "18", indent: 3, label: "Other Eastern Africa"},
+			{var: 'PSSPUK', code: "19", indent: 3, label: "South Africa"},
+			{var: 'PSSPUK', code: "20", indent: 3, label: "Other Southern Africa"},
+			{var: 'PSSPUK_R011A', code: "21-31", indent: 1, label: "Middle East and Asia"},
+			{var: 'PSSPUK_R018A', code: "21", indent: 2, label: "Middle East"},
+			{var: 'PSSPUK_R018A', code: "22-23", indent: 2, label: "Eastern Asia"},
+			{var: 'PSSPUK', code: "22", indent: 3, label: "China"},
+			{var: 'PSSPUK', code: "23", indent: 3, label: "Other Eastern Asia"},
+			{var: 'PSSPUK_R018A', code: "24-28", indent: 2, label: "Southern Asia"},
+			{var: 'PSSPUK', code: "24", indent: 3, label: "Bangladesh"},
+			{var: 'PSSPUK', code: "25", indent: 3, label: "India"},
+			{var: 'PSSPUK', code: "26", indent: 3, label: "Pakistan"},
+			{var: 'PSSPUK', code: "27", indent: 3, label: "Sri Lanka"},
+			{var: 'PSSPUK', code: "28", indent: 3, label: "Other Southern Asia"},
+			{var: 'PSSPUK_R018A', code: "29-30", indent: 2, label: "South-East Asia"},
+			{var: 'PSSPUK', code: "29", indent: 3, label: "Philippines"},
+			{var: 'PSSPUK', code: "30", indent: 3, label: "Other South-East Asia"},
+			{var: 'PSSPUK_R018A', code: "31", indent: 2, label: "Central Asia"},
+			{var: 'PSSPUK_R011A', code: "32-37,41", indent: 1, label: "The Americas and the Caribbean"},
+			{var: 'PSSPUK_R018A', code: "32,33,36,37,41", indent: 2, label: "North America and the Caribbean"},
+			{var: 'PSSPUK', code: "32", indent: 3, label: "Canada"},
+			{var: 'PSSPUK', code: "33", indent: 3, label: "United States"},
+			{var: 'PSSPUK', code: "36", indent: 3, label: "Jamaica"},
+			{var: 'PSSPUK', code: "37", indent: 3, label: "Other Caribbean"},
+			{var: 'PSSPUK', code: "41", indent: 3, label: "British Overseas Territories"},
+			{var: 'PSSPUK_R018A', code: "34-35", indent: 2, label: "Central and South America"},
+			{var: 'PSSPUK', code: "34", indent: 3, label: "Central America"},
+			{var: 'PSSPUK', code: "35", indent: 3, label: "South America"},
+			{var: 'PSSPUK_R011A', code: "38-40", indent: 1, label: "Antarctica and Oceania"},
+			{var: 'PSSPUK', code: "38", indent: 2, label: "Australia"},
+			{var: 'PSSPUK', code: "39", indent: 2, label: "New Zealand"},
+			{var: 'PSSPUK', code: "40", indent: 2, label: "Other Oceania"},
+			{var: 'PSSPUK_R004A', code: '42', label: 'no passport held'},
+		] 
 	}
-];
+].sort((a, b) => a.label.localeCompare(b.label));
 
 export const codes = {
 	age: [
@@ -377,6 +302,13 @@ export const codes = {
 		{label: 'rent free', cells: [9]},
 		{label: 'other', cells: [8]}
 	],
+	marital: [
+		{label: 'Single (never married)', cells: [0]},
+		{label: 'Married/civil partnership', cells: [1, 2]},
+		{label: 'Separated', cells: [3]},
+		{label: 'Divorced', cells: [4]},
+		{label: 'Widowed', cells: [5]}
+	]
 };
 
 export const mapStyle = 'https://bothness.github.io/ons-basemaps/data/style-omt.json';

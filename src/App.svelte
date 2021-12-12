@@ -206,7 +206,6 @@
 
 	getTopo(ladBounds.url, ladBounds.layer)
 	.then(json => {
-		console.log(json);
 		let index = {};
 		json.features.forEach(d => index[d.properties[ladBounds.code]] = d.properties[ladBounds.name]);
 		data.geojson = json;
@@ -227,7 +226,7 @@
 
 <h1 class="mtl">Key population explorer</h1>
 
-<p>Select one or more topics to define a population group to compare with the whole population of England and Wales.</p>
+<p>Select one or more identity characterists to define a population group to compare with the whole population of England and Wales.</p>
 
 <select bind:value={active} disabled={!ops[0]}>
 	<option value={null}>{!ops[0] ? 'No more topics available' : selected[0] ? 'Select another topic' : 'Select a topic'}</option>
@@ -375,6 +374,14 @@
 		<span class="muted">{texts.nodata}</span>
 		{:else}
 		<StackedBarChart label={texts.comparison} data="{data.selected && makeData(['residents', 'health'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
+		{/if}
+	</div>
+	<div>
+		<span class="text-label">Marital status</span><br/>
+		{#if isNA(data.selected.residents.marital.values)}
+		<span class="muted">{texts.nodata}</span>
+		{:else}
+		<StackedBarChart label={texts.comparison} data="{data.selected && makeData(['residents', 'marital'])}" zKey="{sum.all != sum.selected ? 'z' : null}"/>
 		{/if}
 	</div>
 	<div>
